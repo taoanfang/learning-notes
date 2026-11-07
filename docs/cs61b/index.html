@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从 Java 面向对象、泛型与集合出发，进入复杂度分析、链表、树结构与算法设计。现有笔记来自 Java、数据结构与算法目录，按 CS61B 学习路径重新编排。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CS61B · Java 与数据结构 · Mingjv Li Notes">
+  <meta property="og:description" content="从 Java 面向对象、泛型与集合出发，进入复杂度分析、链表、树结构与算法设计。现有笔记来自 Java、数据结构与算法目录，按 CS61B 学习路径重新编排。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>CS61B · Java 与数据结构 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="course-index-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <main id="main-content" class="course-page accent-teal">
+    <header class="page-hero course-hero">
+      <div class="page-hero-inner">
+        <div>
+          <a class="back-link" href="../index.html"><i data-lucide="arrow-left" width="15" height="15" aria-hidden="true"></i> All notes</a>
+          <p class="eyebrow">Data Structures</p>
+          <h1>CS61B</h1>
+          <p class="page-subtitle">Java 与数据结构</p>
+          <p class="page-intro">从 Java 面向对象、泛型与集合出发，进入复杂度分析、链表、树结构与算法设计。现有笔记来自 Java、数据结构与算法目录，按 CS61B 学习路径重新编排。</p>
+        </div>
+        <div class="course-summary">
+          <span><strong>20</strong> notes</span>
+          <span><strong>32</strong> min</span>
+          <button class="search-trigger compact" type="button" data-search-open><i data-lucide="search" width="16" height="16" aria-hidden="true"></i> Search notes</button>
+        </div>
+      </div>
+    </header>
+    <div class="course-content"><section class="course-group">
+        <h2>Java language foundations</h2>
+        <div class="note-list"><a class="note-row" href="01-java-oop-encapsulation.html">
+              <span class="note-number">01</span>
+              <span class="note-main"><strong>Java 面向对象与封装</strong><small>类、对象、构造方法、访问控制、this 与 static。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="02-inheritance-interfaces.html">
+              <span class="note-number">02</span>
+              <span class="note-main"><strong>继承、抽象类与接口</strong><small>继承关系、方法重写、super、final、抽象类和接口的职责边界。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="03-polymorphism-inner-classes.html">
+              <span class="note-number">03</span>
+              <span class="note-main"><strong>多态与内部类</strong><small>静态与动态多态、向上向下转型、Object 类和四种内部类。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="04-generics.html">
+              <span class="note-number">04</span>
+              <span class="note-main"><strong>Java 泛型</strong><small>泛型类、泛型接口和类型参数的基本用法。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="05-java-api.html">
+              <span class="note-number">05</span>
+              <span class="note-main"><strong>Java API：字符串、包装类与正则</strong><small>String、StringBuffer、包装类以及正则表达式校验。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="06-collections-iterators.html">
+              <span class="note-number">06</span>
+              <span class="note-main"><strong>集合与迭代器</strong><small>List、Set、增强 for 循环与 Iterator 之间的关系。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="07-exceptions.html">
+              <span class="note-number">07</span>
+              <span class="note-main"><strong>异常处理</strong><small>异常体系、捕获与声明，以及课堂中的关键图示。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="08-io-streams.html">
+              <span class="note-number">08</span>
+              <span class="note-main"><strong>文件与 IO 流</strong><small>File、字节流、字符流与转换流。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="09-multithreading.html">
+              <span class="note-number">09</span>
+              <span class="note-main"><strong>多线程</strong><small>线程生命周期、创建方式、同步、锁与并发安全。</small></span>
+              <span class="note-time">3 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="10-network-programming.html">
+              <span class="note-number">10</span>
+              <span class="note-main"><strong>网络编程</strong><small>TCP/IP、Socket、UDP 与多线程网络通信。</small></span>
+              <span class="note-time">3 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section><section class="course-group">
+        <h2>Core data structures</h2>
+        <div class="note-list"><a class="note-row" href="11-adt-and-algorithms.html">
+              <span class="note-number">11</span>
+              <span class="note-main"><strong>ADT 与算法基础</strong><small>抽象数据类型、算法五要素以及如何从复杂度开始阅读算法。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="12-linear-lists.html">
+              <span class="note-number">12</span>
+              <span class="note-main"><strong>线性表</strong><small>线性表的类型定义、顺序实现与链式表达。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="13-stacks-and-queues.html">
+              <span class="note-number">13</span>
+              <span class="note-main"><strong>栈与队列</strong><small>栈和队列的抽象结构与使用场景。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="14-linked-lists-recursion.html">
+              <span class="note-number">14</span>
+              <span class="note-main"><strong>链表与递归数据结构</strong><small>SLL、递归结构、哨兵节点和空指针处理。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="15-doubly-linked-lists.html">
+              <span class="note-number">15</span>
+              <span class="note-main"><strong>双向链表与动态数组</strong><small>从单链表到双向链表，以及数组扩容的摊销思路。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="16-generic-collections.html">
+              <span class="note-number">16</span>
+              <span class="note-main"><strong>泛型集合入门</strong><small>用 List 和泛型组织一组同类型数据。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="17-comparable-comparator.html">
+              <span class="note-number">17</span>
+              <span class="note-main"><strong>多态、Comparable 与 Comparator</strong><small>亚型多态、参数化多态以及两套比较器接口。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="18-asymptotics-union-find.html">
+              <span class="note-number">18</span>
+              <span class="note-main"><strong>增长阶与并查集</strong><small>Big-O、Big-Theta、Quick Find、Quick Union、按秩合并与路径压缩。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section><section class="course-group">
+        <h2>Complexity and trees</h2>
+        <div class="note-list"><a class="note-row" href="19-binary-search-trees.html">
+              <span class="note-number">19</span>
+              <span class="note-main"><strong>二叉搜索树</strong><small>BST 定义、查找路径、插入删除与复杂度。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="20-b-trees.html">
+              <span class="note-number">20</span>
+              <span class="note-main"><strong>B 树</strong><small>从 BST 退化问题进入平衡树与 B 树结构。</small></span>
+              <span class="note-time">3 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section></div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

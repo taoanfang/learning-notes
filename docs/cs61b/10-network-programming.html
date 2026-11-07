@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TCP/IP、Socket、UDP 与多线程网络通信。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="网络编程 · Mingjv Li Notes">
+  <meta property="og:description" content="TCP/IP、Socket、UDP 与多线程网络通信。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>网络编程 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-teal">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS61B</a><span>Java 与数据结构</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-java-oop-encapsulation.html">
+        <span>01</span>Java 面向对象与封装
+      </a><a class="" href="02-inheritance-interfaces.html">
+        <span>02</span>继承、抽象类与接口
+      </a><a class="" href="03-polymorphism-inner-classes.html">
+        <span>03</span>多态与内部类
+      </a><a class="" href="04-generics.html">
+        <span>04</span>Java 泛型
+      </a><a class="" href="05-java-api.html">
+        <span>05</span>Java API：字符串、包装类与正则
+      </a><a class="" href="06-collections-iterators.html">
+        <span>06</span>集合与迭代器
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-io-streams.html">
+        <span>08</span>文件与 IO 流
+      </a><a class="" href="09-multithreading.html">
+        <span>09</span>多线程
+      </a><a class="is-current" href="10-network-programming.html">
+        <span>10</span>网络编程
+      </a><a class="" href="11-adt-and-algorithms.html">
+        <span>11</span>ADT 与算法基础
+      </a><a class="" href="12-linear-lists.html">
+        <span>12</span>线性表
+      </a><a class="" href="13-stacks-and-queues.html">
+        <span>13</span>栈与队列
+      </a><a class="" href="14-linked-lists-recursion.html">
+        <span>14</span>链表与递归数据结构
+      </a><a class="" href="15-doubly-linked-lists.html">
+        <span>15</span>双向链表与动态数组
+      </a><a class="" href="16-generic-collections.html">
+        <span>16</span>泛型集合入门
+      </a><a class="" href="17-comparable-comparator.html">
+        <span>17</span>多态、Comparable 与 Comparator
+      </a><a class="" href="18-asymptotics-union-find.html">
+        <span>18</span>增长阶与并查集
+      </a><a class="" href="19-binary-search-trees.html">
+        <span>19</span>二叉搜索树
+      </a><a class="" href="20-b-trees.html">
+        <span>20</span>B 树
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS61B</a><span>/</span><span>Java language foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS61B · Java language foundations</p>
+          <h1>网络编程</h1>
+          <p class="note-summary">TCP/IP、Socket、UDP 与多线程网络通信。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 3 min</span>
+            <span>10 / 20</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h3 id="1-tcpip-四层参考模型" tabindex="-1">1. TCP/IP 四层参考模型</h3>
+<p>Java 网络编程核心作用于<strong>传输层与应用层交界处</strong>。
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260615182326.png" alt="Pasted image 20260615182326"></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">层级（由下至上）</th>
+<th style="text-align:left">名称</th>
+<th style="text-align:left">核心功能</th>
+<th style="text-align:left">代表协议 / 组件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">第 1 层</td>
+<td style="text-align:left">链路层（网络接口层）</td>
+<td style="text-align:left">处理物理硬件接口，对接传输介质</td>
+<td style="text-align:left">网卡、设备驱动</td>
+</tr>
+<tr>
+<td style="text-align:left">第 2 层</td>
+<td style="text-align:left">网络层（互联层）</td>
+<td style="text-align:left">数据分组、路由转发，标识网络主机</td>
+<td style="text-align:left">IP 协议</td>
+</tr>
+<tr>
+<td style="text-align:left">第 3 层</td>
+<td style="text-align:left">传输层</td>
+<td style="text-align:left">控制端到端通信，区分应用程序</td>
+<td style="text-align:left">TCP、UDP、Socket</td>
+</tr>
+<tr>
+<td style="text-align:left">第 4 层</td>
+<td style="text-align:left">应用层</td>
+<td style="text-align:left">面向应用程序的协议，Java 主要交互层</td>
+<td style="text-align:left">HTTP、FTP、DNS、SMTP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-tcp-与-udp-协议对比" tabindex="-1">2. TCP 与 UDP 协议对比</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">对比维度</th>
+<th style="text-align:left">TCP</th>
+<th style="text-align:left">UDP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">连接特性</td>
+<td style="text-align:left"><strong>面向连接</strong>（三次握手建立链路）</td>
+<td style="text-align:left"><strong>面向无连接</strong>（直接发包）</td>
+</tr>
+<tr>
+<td style="text-align:left">可靠性</td>
+<td style="text-align:left">可靠，保证数据无差错、不丢失</td>
+<td style="text-align:left">不可靠，尽力传输，不保证送达</td>
+</tr>
+<tr>
+<td style="text-align:left">资源消耗</td>
+<td style="text-align:left">高，延迟大</td>
+<td style="text-align:left">低，延迟小</td>
+</tr>
+<tr>
+<td style="text-align:left">传输形式</td>
+<td style="text-align:left">字节流</td>
+<td style="text-align:left">独立数据报</td>
+</tr>
+<tr>
+<td style="text-align:left">典型场景</td>
+<td style="text-align:left">文件传输、邮件发送</td>
+<td style="text-align:left">直播 / 视频、实时游戏、语音通话、物联网</td>
+</tr>
+</tbody>
+</table>
+<h4 id="tcp-三次握手" tabindex="-1">TCP 三次握手</h4>
+<ol>
+<li>客户端 → 服务端：发起连接请求</li>
+<li>服务端 → 客户端：回送响应，确认收到请求</li>
+<li>客户端 → 服务端：再次发送确认，连接正式建立</li>
+</ol>
+<h3 id="3-ip-地址与端口号" tabindex="-1">3. IP 地址与端口号</h3>
+<ul>
+<li>
+<p><strong>IP 地址</strong>：网络中主机的唯一标识，IPv4 为点分十进制格式（如<code>127.0.0.1</code>）</p>
+<ul>
+<li>组成：<code>网络地址 + 主机地址</code></li>
+<li>特殊地址：<code>127.0.0.1</code> 为本机回环地址</li>
+<li>分类：A/B/C/D/E 五类，局域网常用 C 类（192.0.0.1~223.255.255.254）</li>
+</ul>
+</li>
+<li>
+<p><strong>端口号</strong>：主机内应用服务的唯一标识</p>
+<ul>
+<li>范围：<code>0~65535</code>，其中<code>0~1023</code>为系统预留端口</li>
+<li>作用：IP 定位主机，端口定位主机内的具体应用</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-基础工具类" tabindex="-1">4. 基础工具类</h3>
+<h4 id="inetaddress（ip-地址封装类）" tabindex="-1">InetAddress（IP 地址封装类）</h4>
+<p>无公共构造方法，通过静态方法获取实例：</p>
+<ul>
+<li><code>getLocalHost()</code>：获取本机 IP 对象</li>
+<li><code>getByName(String host)</code>：根据域名 / 主机名获取 IP 对象</li>
+<li><code>getHostAddress()</code>：获取字符串格式的 IP 地址</li>
+<li><code>getHostName()</code>：获取主机名 / 域名</li>
+<li><code>isReachable(int timeout)</code>：检测主机是否可连通</li>
+</ul>
+<h4 id="url（统一资源定位器）" tabindex="-1">URL（统一资源定位器）</h4>
+<ul>
+<li>
+<p>格式：<code>传输协议://主机名:端口号/文件名#引用</code></p>
+</li>
+<li>
+<p>核心方法：</p>
+<ul>
+<li><code>openStream()</code>：获取网络资源输入流，可读取网页源码</li>
+<li><code>openConnection()</code>：获取 URL 连接对象</li>
+</ul>
+</li>
+</ul>
+<h2 id="二、tcp-网络编程" tabindex="-1">二、TCP 网络编程</h2>
+<p>核心类：<code>ServerSocket</code>（服务端）、<code>Socket</code>（通信链路）</p>
+<h3 id="1-核心-api" tabindex="-1">1. 核心 API</h3>
+<h4 id="serversocket（服务端监听者）" tabindex="-1">ServerSocket（服务端监听者）</h4>
+<ul>
+<li>
+<p>职责：绑定端口，阻塞等待客户端连接，连接成功返回专属 Socket</p>
+</li>
+<li>
+<p>常用构造：<code>ServerSocket(int port)</code> 绑定指定端口</p>
+</li>
+<li>
+<p>核心方法：</p>
+<ul>
+<li><code>accept()</code>：<strong>阻塞方法</strong>，等待客户端连接，连接成功返回 Socket 对象</li>
+<li><code>close()</code>：关闭服务端</li>
+</ul>
+</li>
+</ul>
+<h4 id="socket（双向通信链路）" tabindex="-1">Socket（双向通信链路）</h4>
+<ul>
+<li>
+<p>职责：代表客户端与服务端的通信连接，两端各持有一个 Socket</p>
+</li>
+<li>
+<p>常用构造：<code>Socket(String host, int port)</code> 客户端发起连接</p>
+</li>
+<li>
+<p>核心方法：</p>
+<ul>
+<li><code>getInputStream()</code>：获取输入流，<strong>接收</strong>对方数据</li>
+<li><code>getOutputStream()</code>：获取输出流，<strong>发送</strong>数据给对方</li>
+<li><code>close()</code>：关闭连接，需先关闭关联的 IO 流</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-单线程-tcp-通信流程" tabindex="-1">2. 单线程 TCP 通信流程</h3>
+<blockquote>
+<p>先启动服务端，再启动客户端</p>
+</blockquote>
+<p><strong>服务端步骤</strong>：</p>
+<ol>
+<li>创建<code>ServerSocket</code>，绑定端口</li>
+<li>调用<code>accept()</code>阻塞等待客户端连接</li>
+<li>通过 Socket 获取输出流，发送数据</li>
+<li>关闭流、Socket、ServerSocket</li>
+</ol>
+<p><strong>客户端步骤</strong>：</p>
+<ol>
+<li>创建<code>Socket</code>，连接服务端 IP + 端口</li>
+<li>通过 Socket 获取输入流，读取数据</li>
+<li>关闭流、Socket</li>
+</ol>
+<h3 id="3-多线程-tcp-通信（并发）" tabindex="-1">3. 多线程 TCP 通信（并发）</h3>
+<p>解决单线程无法同时处理多客户端的问题</p>
+<ul>
+<li><strong>主线程</strong>：<code>while(true)</code>循环调用<code>accept()</code>，持续接收新连接，只做分发</li>
+<li><strong>子线程</strong>：每接入一个客户端，新建独立线程处理该客户端的所有数据交互</li>
+<li>特点：主线程不阻塞，多客户端可并发访问，互不干扰</li>
+</ul>
+<hr>
+<h2 id="三、udp-网络编程" tabindex="-1">三、UDP 网络编程</h2>
+<p>核心类：<code>DatagramSocket</code>（收发端口）、<code>DatagramPacket</code>（数据包）</p>
+<h3 id="1-核心-api-1" tabindex="-1">1. 核心 API</h3>
+<h4 id="datagrampacket（数据报包）" tabindex="-1">DatagramPacket（数据报包）</h4>
+<ul>
+<li>
+<p>作用：封装 UDP 传输的数据，自带寻址信息</p>
+</li>
+<li>
+<p><strong>接收端构造</strong>：<code>DatagramPacket(byte[] buf, int length)</code> 仅准备空缓冲区</p>
+</li>
+<li>
+<p><strong>发送端构造</strong>：<code>DatagramPacket(byte[] buf, int length, InetAddress addr, int port)</code> 需指定目标地址 + 端口</p>
+</li>
+<li>
+<p>常用方法：</p>
+<ul>
+<li><code>getData()</code>：获取数据包内的字节数据</li>
+<li><code>getLength()</code>：获取有效数据长度</li>
+<li><code>getAddress()</code> / <code>getPort()</code>：获取发送方的 IP / 端口</li>
+</ul>
+</li>
+</ul>
+<h4 id="datagramsocket（数据报套接字）" tabindex="-1">DatagramSocket（数据报套接字）</h4>
+<ul>
+<li>
+<p>作用：负责数据包的发送与接收</p>
+</li>
+<li>
+<p>构造方法：</p>
+<ul>
+<li><code>DatagramSocket()</code>：系统分配随机端口，多用于发送端</li>
+<li><code>DatagramSocket(int port)</code>：绑定固定端口，多用于接收端</li>
+</ul>
+</li>
+<li>
+<p>核心方法：</p>
+<ul>
+<li><code>receive(DatagramPacket p)</code>：<strong>阻塞方法</strong>，等待接收数据包</li>
+<li><code>send(DatagramPacket p)</code>：发送数据包</li>
+<li><code>setSoTimeout(int timeout)</code>：设置接收超时，避免永久阻塞</li>
+<li><code>close()</code>：关闭连接</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-单线程-udp-通信流程" tabindex="-1">2. 单线程 UDP 通信流程</h3>
+<blockquote>
+<p>必须先启动接收端，否则数据直接丢失</p>
+</blockquote>
+<p><strong>接收端步骤</strong>：</p>
+<ol>
+<li>创建<code>DatagramSocket</code>，绑定固定端口</li>
+<li>创建空的<code>DatagramPacket</code>作为缓冲区</li>
+<li>调用<code>receive()</code>阻塞等待数据</li>
+<li>解析数据包，打印内容与发送方信息</li>
+<li>关闭资源</li>
+</ol>
+<p><strong>发送端步骤</strong>：</p>
+<ol>
+<li>创建<code>DatagramSocket</code>（随机端口）</li>
+<li>封装数据、目标 IP、端口到<code>DatagramPacket</code></li>
+<li>调用<code>send()</code>发送数据包</li>
+<li>关闭资源</li>
+</ol>
+<h3 id="3-多线程-udp-通信（简易聊天）" tabindex="-1">3. 多线程 UDP 通信（简易聊天）</h3>
+<ul>
+<li><strong>接收线程</strong>：循环调用<code>receive()</code>，持续监听并打印收到的消息</li>
+<li><strong>发送线程</strong>：循环读取控制台输入，封装数据包并发送，支持退出指令</li>
+</ul>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="09-multithreading.html"><span>Previous</span><strong>多线程</strong></a>
+    <a class="next" href="11-adt-and-algorithms.html"><span>Next</span><strong>ADT 与算法基础</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-3" href="#1-tcpip-四层参考模型">1. TCP/IP 四层参考模型</a><a class="toc-level-3" href="#2-tcp-与-udp-协议对比">2. TCP 与 UDP 协议对比</a><a class="toc-level-3" href="#3-ip-地址与端口号">3. IP 地址与端口号</a><a class="toc-level-3" href="#4-基础工具类">4. 基础工具类</a><a class="toc-level-2" href="#二、tcp-网络编程">二、TCP 网络编程</a><a class="toc-level-3" href="#1-核心-api">1. 核心 API</a><a class="toc-level-3" href="#2-单线程-tcp-通信流程">2. 单线程 TCP 通信流程</a><a class="toc-level-3" href="#3-多线程-tcp-通信（并发）">3. 多线程 TCP 通信（并发）</a><a class="toc-level-2" href="#三、udp-网络编程">三、UDP 网络编程</a><a class="toc-level-3" href="#1-核心-api-1">1. 核心 API</a><a class="toc-level-3" href="#2-单线程-udp-通信流程">2. 单线程 UDP 通信流程</a><a class="toc-level-3" href="#3-多线程-udp-通信（简易聊天）">3. 多线程 UDP 通信（简易聊天）</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

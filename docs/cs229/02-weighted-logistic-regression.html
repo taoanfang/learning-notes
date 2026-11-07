@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LWR、线性回归的概率解释、逻辑回归与牛顿法。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="局部加权与逻辑回归 · Mingjv Li Notes">
+  <meta property="og:description" content="LWR、线性回归的概率解释、逻辑回归与牛顿法。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>局部加权与逻辑回归 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-blue" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-blue">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS229</a><span>Machine Learning</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-linear-regression.html">
+        <span>01</span>线性回归与梯度下降
+      </a><a class="is-current" href="02-weighted-logistic-regression.html">
+        <span>02</span>局部加权与逻辑回归
+      </a><a class="" href="03-perceptron-glm.html">
+        <span>03</span>感知机与广义线性模型
+      </a><a class="" href="04-softmax-regression.html">
+        <span>04</span>Softmax 回归
+      </a><a class="" href="05-gda-naive-bayes.html">
+        <span>05</span>GDA 与朴素贝叶斯
+      </a><a class="" href="06-support-vector-machines.html">
+        <span>06</span>支持向量机
+      </a><a class="" href="07-kernels.html">
+        <span>07</span>核方法与 SVM 对偶
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS229</a><span>/</span><span>Supervised learning foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS229 · Supervised learning foundations</p>
+          <h1>局部加权与逻辑回归</h1>
+          <p class="note-summary">LWR、线性回归的概率解释、逻辑回归与牛顿法。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>2 / 7</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><blockquote>
+<p><strong>课程</strong>：Stanford CS229 (Autumn 2018) · Andrew Ng
+<strong>本讲主题</strong>：局部加权回归（LWR）、线性回归的概率解释、逻辑回归、牛顿法
+<strong>视频</strong>：<a href="https://www.youtube.com/watch?v=het9HFqo1TQ">Lecture 3 - Locally Weighted &amp; Logistic Regression</a></p>
+</blockquote>
+<hr>
+<h2 id="一、局部加权回归-lwr（locally-weighted-regression）" tabindex="-1">一、局部加权回归 LWR（Locally Weighted Regression）</h2>
+<h3 id="1-参数学习-vs-非参数学习" tabindex="-1">1. 参数学习 vs 非参数学习</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>代表算法</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>参数学习（Parametric）</strong></td>
+<td>线性回归</td>
+<td>固定有限个参数 $\theta$，拟合完就把参数存起来、<strong>丢掉训练集</strong>即可预测</td>
+</tr>
+<tr>
+<td><strong>非参数学习（Non-parametric）</strong></td>
+<td>LWR</td>
+<td>需要保留的数据量<strong>随训练集大小线性增长</strong>，预测时要重新算</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>LWR 是 CS229 接触的<strong>第一个非参数算法</strong>。缺点：数据集很大时，必须把全部数据留在内存/磁盘才能预测。</p>
+</blockquote>
+<h3 id="2-动机：直线拟合不好怎么办" tabindex="-1">2. 动机：直线拟合不好怎么办</h3>
+<ul>
+<li>数据趋势不是直线时，硬拟合直线效果差</li>
+<li>可选方案是人工构造特征（$x^2$、$\sqrt{x}$、$\log x$…），但<strong>不知道该选哪个特征</strong>，选不好还会过拟合</li>
+<li>LWR 的思路：<strong>不为全局拟合一条直线，而是在每个预测点附近，只看邻近样本、局部拟合一条直线</strong></li>
+</ul>
+<h3 id="3-lwr-的做法与权重函数" tabindex="-1">3. LWR 的做法与权重函数</h3>
+<p>要在点 $x$ 处预测时，拟合 $\theta$ 使<strong>加权</strong>代价函数最小：</p>
+<p>$$
+\min_\theta \sum_{i=1}^{m} w^{(i)} \left( h_\theta(x^{(i)}) - y^{(i)} \right)^2
+$$</p>
+<p>权重函数（默认高斯型，注意<strong>它不是高斯概率密度</strong>，不需要积分等于 1）：</p>
+<p>$$
+w^{(i)} = \exp\left(-\frac{(x^{(i)} - x)^2}{2\tau^2}\right)
+$$</p>
+<ul>
+<li>$x^{(i)}$ 离预测点 $x$ 越近 → $w^{(i)} \to 1$（重点关注）</li>
+<li>$x^{(i)}$ 离 $x$ 越远 → $w^{(i)} \to 0$（几乎忽略）</li>
+<li>$\tau$ = <strong>带宽（bandwidth）参数</strong>，控制权重衰减的&quot;宽度&quot;：$\tau$ 小→只看很近的点；$\tau$ 大→考虑更大范围</li>
+</ul>
+<h3 id="4-关键特点" tabindex="-1">4. 关键特点</h3>
+<ul>
+<li><strong>每次预测都要重新拟合</strong>：换一个预测点 $x$，权重全变，要重新解一次 $\theta$</li>
+<li>能自动拟合很弯的曲线，<strong>不用手工设计特征</strong></li>
+<li>代价是计算量大、要保留全部训练数据</li>
+</ul>
+<hr>
+<h2 id="二、线性回归的概率解释（衔接）" tabindex="-1">二、线性回归的概率解释（衔接）</h2>
+<blockquote>
+<p>这一节解释：<strong>为什么代价函数用平方误差？</strong></p>
+</blockquote>
+<p>假设模型有误差：
+$$
+y^{(i)} = \theta^T x^{(i)} + \varepsilon^{(i)}
+$$
+其中噪声 $\varepsilon^{(i)} \sim \mathcal{N}(0, \sigma^2)$，且各样本独立同分布（i.i.d.）。</p>
+<p>于是：
+$$
+p(y^{(i)} \mid x^{(i)}; \theta) \sim \mathcal{N}(\theta^T x^{(i)},\ \sigma^2)
+$$</p>
+<p>写出似然并取对数（对数似然），最大化它（MLE）会推出：</p>
+<p>$$
+\ell(\theta) = \sum_{i=1}^{m} \log p(y^{(i)} \mid x^{(i)}; \theta)
+= \text{常数} - \frac{1}{2\sigma^2}\sum_{i=1}^{m}(y^{(i)}-\theta^T x^{(i)})^2
+$$</p>
+<p>→ <strong>最大化对数似然，等价于最小化平方误差 $\frac12\sum(y-\theta^T x)^2$</strong>。这就是上一讲平方误差代价函数的理论依据。</p>
+<hr>
+<h2 id="三、逻辑回归-logistic-regression（第一个分类算法）" tabindex="-1">三、逻辑回归 Logistic Regression（第一个分类算法）</h2>
+<h3 id="1-为什么分类不能用线性回归" tabindex="-1">1. 为什么分类不能用线性回归</h3>
+<ul>
+<li>二分类问题（如肿瘤：恶性=1 / 良性=0）</li>
+<li>线性回归拟合一条直线，输出值可能远大于1或远小于0；<strong>单个离群点</strong>会把决策边界拉歪，输出概率也不在 [0,1]</li>
+<li>需要一个把输出压到 <strong>[0,1]</strong> 区间的函数 → sigmoid</li>
+</ul>
+<h3 id="2-sigmoid（logistic）函数" tabindex="-1">2. Sigmoid（Logistic）函数</h3>
+<p>$$
+g(z) = \frac{1}{1+e^{-z}}, \qquad h_\theta(x) = g(\theta^T x) = \frac{1}{1+e^{-\theta^T x}}
+$$</p>
+<ul>
+<li>$h_\theta(x)$ 输出解释为：<strong>$y=1$ 的概率</strong></li>
+<li>$g(z)$ 把任意实数映射到 (0,1)</li>
+</ul>
+<h3 id="3-概率模型" tabindex="-1">3. 概率模型</h3>
+<p>$$
+\begin{cases}
+p(y=1 \mid x;\theta) = h_\theta(x) \
+p(y=0 \mid x;\theta) = 1 - h_\theta(x)
+\end{cases}
+$$</p>
+<p>用一个式子合并（$y \in {0,1}$）：</p>
+<p>$$
+p(y \mid x;\theta) = h_\theta(x)^y \cdot \big(1-h_\theta(x)\big)^{1-y}
+$$</p>
+<blockquote>
+<p>记号技巧：$y=1$ 时第二项 $=1$（指数为0），只留 $h(x)$；$y=0$ 时第一项 $=1$，只留 $1-h(x)$。</p>
+</blockquote>
+<h3 id="4-极大似然估计" tabindex="-1">4. 极大似然估计</h3>
+<p>似然函数（独立样本连乘）：</p>
+<p>$$
+L(\theta) = \prod_{i=1}^{m} h_\theta(x^{(i)})^{y^{(i)}} \big(1-h_\theta(x^{(i)})\big)^{1-y^{(i)}}
+$$</p>
+<p>取对数（对数似然）：</p>
+<p>$$
+\ell(\theta) = \sum_{i=1}^{m} \left[ y^{(i)}\log h_\theta(x^{(i)}) + (1-y^{(i)})\log\big(1-h_\theta(x^{(i)})\big) \right]
+$$</p>
+<p>目标：<strong>最大化</strong> $\ell(\theta)$。</p>
+<h3 id="5-梯度上升-gradient-ascent" tabindex="-1">5. 梯度上升 Gradient Ascent</h3>
+<p>$$
+\theta_j := \theta_j + \alpha \frac{\partial}{\partial \theta_j}\ell(\theta)
+$$</p>
+<p>代入 $h_\theta$ 求导后，更新式最终为：</p>
+<p>$$
+\theta_j := \theta_j + \alpha \left( y^{(i)} - h_\theta(x^{(i)}) \right) x_j^{(i)}
+$$</p>
+<blockquote>
+<p><strong>有趣的点</strong>：这个更新式和线性回归<strong>形式上几乎一样</strong>！差别只在于：</p>
+<ul>
+<li>线性回归：最小化平方误差，用<strong>减号</strong>（梯度下降）</li>
+<li>逻辑回归：最大化对数似然，用<strong>加号</strong>（梯度上升），且 $h_\theta$ 的定义换成了 sigmoid</li>
+</ul>
+</blockquote>
+<h3 id="6-性质" tabindex="-1">6. 性质</h3>
+<ul>
+<li>对数似然 $\ell(\theta)$ 是<strong>凹函数</strong> → <strong>只有全局最优，没有局部最优</strong></li>
+<li>这也是选 sigmoid 的原因之一：保证似然函数单峰</li>
+<li><strong>逻辑回归没有正规方程（闭式解）</strong>，必须用迭代优化（梯度上升 / 牛顿法）</li>
+</ul>
+<hr>
+<h2 id="四、牛顿法-newton’s-method（更快的优化）" tabindex="-1">四、牛顿法 Newton’s Method（更快的优化）</h2>
+<h3 id="1-动机" tabindex="-1">1. 动机</h3>
+<ul>
+<li>梯度上升每次走&quot;小步&quot;，要很多次迭代才收敛（可能几百上千次）</li>
+<li>牛顿法每次走&quot;大步&quot;，收敛快得多（可能十几次就够）</li>
+<li>代价：<strong>每次迭代更贵</strong></li>
+</ul>
+<h3 id="2-更新规则" tabindex="-1">2. 更新规则</h3>
+<p>标量情况（求 $f(\theta)=0$ 的根）：</p>
+<p>$$
+\theta := \theta - \frac{f(\theta)}{f’(\theta)}
+$$</p>
+<p>推广到<strong>最大化对数似然</strong>（向量形式）：</p>
+<p>$$
+\theta := \theta - H^{-1} \nabla_\theta \ell(\theta)
+$$</p>
+<ul>
+<li>$\nabla_\theta \ell(\theta)$：梯度向量（一阶导数）</li>
+<li>$H$ = <strong>Hessian 矩阵</strong>（二阶导数矩阵），维度 $(n+1)\times(n+1)$</li>
+</ul>
+<h3 id="3-优缺点与使用经验" tabindex="-1">3. 优缺点与使用经验</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>牛顿法</th>
+<th>梯度上升</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>迭代次数</td>
+<td>很少（~10次）</td>
+<td>很多</td>
+</tr>
+<tr>
+<td>每次代价</td>
+<td>贵（要算并求逆 Hessian）</td>
+<td>便宜（只算梯度）</td>
+</tr>
+<tr>
+<td>适用参数规模</td>
+<td><strong>参数少</strong>（几十维以内）</td>
+<td><strong>参数多</strong>（万维以上）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>经验法则：参数只有 10~50 个 → 用牛顿法；参数上万 → 用梯度下降。高维时求逆大矩阵太贵。</p>
+</blockquote>
+<hr>
+<h2 id="小结" tabindex="-1">小结</h2>
+<pre class="hljs"><code>非参数方法：LWR（局部加权，预测时重新拟合，保留全部数据）
+        ↓
+概率解释：高斯噪声假设 → 平方误差 = MLE
+        ↓
+分类问题：sigmoid 把输出压到[0,1] → 逻辑回归
+        ↓
+优化：梯度上升（通用）/ 牛顿法（参数少时更快）
+</code></pre>
+<p><strong>本讲关键词</strong>：非参数、LWR 带宽 $\tau$、sigmoid、极大似然、梯度上升 vs 梯度下降、Hessian 与牛顿法。</p>
+<p><strong>下讲预告</strong>：感知机、指数分布族、广义线性模型（GLM）、Softmax 回归——会解释&quot;为什么线性回归/逻辑回归都长一个样&quot;。</p>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="01-linear-regression.html"><span>Previous</span><strong>线性回归与梯度下降</strong></a>
+    <a class="next" href="03-perceptron-glm.html"><span>Next</span><strong>感知机与广义线性模型</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#一、局部加权回归-lwr（locally-weighted-regression）">一、局部加权回归 LWR（Locally Weighted Regression）</a><a class="toc-level-3" href="#1-参数学习-vs-非参数学习">1. 参数学习 vs 非参数学习</a><a class="toc-level-3" href="#2-动机：直线拟合不好怎么办">2. 动机：直线拟合不好怎么办</a><a class="toc-level-3" href="#3-lwr-的做法与权重函数">3. LWR 的做法与权重函数</a><a class="toc-level-3" href="#4-关键特点">4. 关键特点</a><a class="toc-level-2" href="#二、线性回归的概率解释（衔接）">二、线性回归的概率解释（衔接）</a><a class="toc-level-2" href="#三、逻辑回归-logistic-regression（第一个分类算法）">三、逻辑回归 Logistic Regression（第一个分类算法）</a><a class="toc-level-3" href="#1-为什么分类不能用线性回归">1. 为什么分类不能用线性回归</a><a class="toc-level-3" href="#2-sigmoid（logistic）函数">2. Sigmoid（Logistic）函数</a><a class="toc-level-3" href="#3-概率模型">3. 概率模型</a><a class="toc-level-3" href="#4-极大似然估计">4. 极大似然估计</a><a class="toc-level-3" href="#5-梯度上升-gradient-ascent">5. 梯度上升 Gradient Ascent</a><a class="toc-level-3" href="#6-性质">6. 性质</a><a class="toc-level-2" href="#四、牛顿法-newton’s-method（更快的优化）">四、牛顿法 Newton&#039;s Method（更快的优化）</a><a class="toc-level-3" href="#1-动机">1. 动机</a><a class="toc-level-3" href="#2-更新规则">2. 更新规则</a><a class="toc-level-3" href="#3-优缺点与使用经验">3. 优缺点与使用经验</a><a class="toc-level-2" href="#小结">小结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

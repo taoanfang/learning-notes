@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="异常与普通条件判断的区别，以及 try/except 的控制流。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="异常处理 · Mingjv Li Notes">
+  <meta property="og:description" content="异常与普通条件判断的区别，以及 try/except 的控制流。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>异常处理 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-amber">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">Python</a><span>程序设计基础</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-sequences-and-collections.html">
+        <span>01</span>序列与集合
+      </a><a class="" href="02-strings.html">
+        <span>02</span>字符串
+      </a><a class="" href="03-dictionaries.html">
+        <span>03</span>字典
+      </a><a class="" href="04-control-flow.html">
+        <span>04</span>条件、循环与代码组织
+      </a><a class="" href="05-functions.html">
+        <span>05</span>函数
+      </a><a class="" href="06-encapsulation.html">
+        <span>06</span>封装
+      </a><a class="is-current" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-files-and-streams.html">
+        <span>08</span>文件与流
+      </a><a class="" href="09-dunder-properties-iterators.html">
+        <span>09</span>特殊方法、属性与迭代器
+      </a><a class="" href="10-numpy-matplotlib.html">
+        <span>10</span>NumPy 与 Matplotlib
+      </a><a class="" href="11-pandas.html">
+        <span>11</span>Pandas 数据分析
+      </a><a class="" href="12-regex-json-csv.html">
+        <span>12</span>正则表达式、JSON 与 CSV
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">Python</a><span>/</span><span>Objects, files, and iteration</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">Python · Objects, files, and iteration</p>
+          <h1>异常处理</h1>
+          <p class="note-summary">异常与普通条件判断的区别，以及 try/except 的控制流。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 1 min</span>
+            <span>7 / 12</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h3 id="异常-vs-普通条件判断" tabindex="-1">异常 vs 普通条件判断</h3>
+<ul>
+<li><strong>适合 if 分支</strong>：业务规则内的正常分支，如成绩是否及格、菜单选项判断</li>
+<li><strong>适合异常处理</strong>：运行时的失败情况，如字符串转数字失败、文件不存在、除数为 0、下标越界</li>
+<li>核心区别：异常不替代条件判断，专门处理正常流程之外的失败场景</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>异常类型</th>
+<th>触发场景</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ValueError</td>
+<td>类型正确但值不合法，例 <code>int(&quot;abc&quot;)</code></td>
+<td></td>
+</tr>
+<tr>
+<td>TypeError</td>
+<td>对象类型不匹配，例字符串与数字非法运算</td>
+<td></td>
+</tr>
+<tr>
+<td>ZeroDivisionError</td>
+<td>除数为 0</td>
+<td></td>
+</tr>
+<tr>
+<td>IndexError</td>
+<td>序列下标越界</td>
+<td></td>
+</tr>
+<tr>
+<td>KeyError</td>
+<td>访问字典不存在的键</td>
+<td></td>
+</tr>
+<tr>
+<td>FileNotFoundError</td>
+<td>打开不存在的文件</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="自定义异常" tabindex="-1">自定义异常</h3>
+<ul>
+<li>
+<p>定义方式：继承 <code>Exception</code> 类，通常仅需定义类名即可</p>
+<pre class="hljs"><code>class ScoreError(Exception):
+    pass
+</code></pre>
+</li>
+<li>
+<p>作用：为业务错误提供专属的异常类型，区分语法错误与业务规则错误，便于精准捕获和定位问题</p>
+</li>
+</ul>
+<p>推荐写法：<code>except Exception as e:</code>，明确捕获常规异常同时保留错误信息
+except (ValueError, ZeroDivisionError) as e:</p>
+<h3 id="finally-子句" tabindex="-1">finally 子句</h3>
+<ul>
+<li>执行时机：无论是否发生异常，最终一定会执行</li>
+<li>典型用途：关闭文件、释放资源、恢复现场，保证善后操作一定执行</li>
+</ul>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="06-encapsulation.html"><span>Previous</span><strong>封装</strong></a>
+    <a class="next" href="08-files-and-streams.html"><span>Next</span><strong>文件与流</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-3" href="#异常-vs-普通条件判断">异常 vs 普通条件判断</a><a class="toc-level-3" href="#自定义异常">自定义异常</a><a class="toc-level-3" href="#finally-子句">finally 子句</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

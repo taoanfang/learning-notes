@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从序列、字符串、字典和控制流开始，逐步进入函数、对象模型、文件、NumPy、Matplotlib、Pandas 与数据格式处理。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Python · 程序设计基础 · Mingjv Li Notes">
+  <meta property="og:description" content="从序列、字符串、字典和控制流开始，逐步进入函数、对象模型、文件、NumPy、Matplotlib、Pandas 与数据格式处理。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>Python · 程序设计基础 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="course-index-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <main id="main-content" class="course-page accent-amber">
+    <header class="page-hero course-hero">
+      <div class="page-hero-inner">
+        <div>
+          <a class="back-link" href="../index.html"><i data-lucide="arrow-left" width="15" height="15" aria-hidden="true"></i> All notes</a>
+          <p class="eyebrow">Programming</p>
+          <h1>Python</h1>
+          <p class="page-subtitle">程序设计基础</p>
+          <p class="page-intro">从序列、字符串、字典和控制流开始，逐步进入函数、对象模型、文件、NumPy、Matplotlib、Pandas 与数据格式处理。</p>
+        </div>
+        <div class="course-summary">
+          <span><strong>12</strong> notes</span>
+          <span><strong>20</strong> min</span>
+          <button class="search-trigger compact" type="button" data-search-open><i data-lucide="search" width="16" height="16" aria-hidden="true"></i> Search notes</button>
+        </div>
+      </div>
+    </header>
+    <div class="course-content"><section class="course-group">
+        <h2>Language and control flow</h2>
+        <div class="note-list"><a class="note-row" href="01-sequences-and-collections.html">
+              <span class="note-number">01</span>
+              <span class="note-main"><strong>序列与集合</strong><small>列表、元组、集合和序列操作。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="02-strings.html">
+              <span class="note-number">02</span>
+              <span class="note-main"><strong>字符串</strong><small>字符串不可变性、索引、切片和常用方法。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="03-dictionaries.html">
+              <span class="note-number">03</span>
+              <span class="note-main"><strong>字典</strong><small>键值映射、查找、更新和字典的典型使用方式。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="04-control-flow.html">
+              <span class="note-number">04</span>
+              <span class="note-main"><strong>条件、循环与代码组织</strong><small>赋值、布尔判断、if、while、for、命名空间与常用内置工具。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="05-functions.html">
+              <span class="note-number">05</span>
+              <span class="note-main"><strong>函数</strong><small>def、参数传递、作用域与可变默认参数陷阱。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section><section class="course-group">
+        <h2>Objects, files, and iteration</h2>
+        <div class="note-list"><a class="note-row" href="06-encapsulation.html">
+              <span class="note-number">06</span>
+              <span class="note-main"><strong>封装</strong><small>类、__init__、实例属性以及把状态和行为放在一起。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="07-exceptions.html">
+              <span class="note-number">07</span>
+              <span class="note-main"><strong>异常处理</strong><small>异常与普通条件判断的区别，以及 try/except 的控制流。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="08-files-and-streams.html">
+              <span class="note-number">08</span>
+              <span class="note-main"><strong>文件与流</strong><small>文件打开模式、读写与上下文管理。</small></span>
+              <span class="note-time">1 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="09-dunder-properties-iterators.html">
+              <span class="note-number">09</span>
+              <span class="note-main"><strong>特殊方法、属性与迭代器</strong><small>容器协议、property、可迭代对象、迭代器与生成器。</small></span>
+              <span class="note-time">3 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section><section class="course-group">
+        <h2>Data analysis tools</h2>
+        <div class="note-list"><a class="note-row" href="10-numpy-matplotlib.html">
+              <span class="note-number">10</span>
+              <span class="note-main"><strong>NumPy 与 Matplotlib</strong><small>ndarray、向量化、广播、布尔索引与常用绘图 API。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="11-pandas.html">
+              <span class="note-number">11</span>
+              <span class="note-main"><strong>Pandas 数据分析</strong><small>Series、DataFrame、清洗、筛选、分组聚合和表格连接。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a><a class="note-row" href="12-regex-json-csv.html">
+              <span class="note-number">12</span>
+              <span class="note-main"><strong>正则表达式、JSON 与 CSV</strong><small>文本模式匹配、结构化数据读写和常见数据交换格式。</small></span>
+              <span class="note-time">2 min</span>
+              <i data-lucide="arrow-right" width="17" height="17" aria-hidden="true"></i>
+            </a></div>
+      </section></div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

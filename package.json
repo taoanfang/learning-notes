@@ -1,0 +1,24 @@
+{
+  "name": "mingjv-li-learning-notes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Supporting course notes for Mingjv Li's personal homepage.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.22",
+    "lucide": "^0.468.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-mark": "^4.0.0",
+    "markdown-it-task-lists": "^2.1.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.0"
+  }
+}

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="容器协议、property、可迭代对象、迭代器与生成器。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="特殊方法、属性与迭代器 · Mingjv Li Notes">
+  <meta property="og:description" content="容器协议、property、可迭代对象、迭代器与生成器。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>特殊方法、属性与迭代器 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-amber">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">Python</a><span>程序设计基础</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-sequences-and-collections.html">
+        <span>01</span>序列与集合
+      </a><a class="" href="02-strings.html">
+        <span>02</span>字符串
+      </a><a class="" href="03-dictionaries.html">
+        <span>03</span>字典
+      </a><a class="" href="04-control-flow.html">
+        <span>04</span>条件、循环与代码组织
+      </a><a class="" href="05-functions.html">
+        <span>05</span>函数
+      </a><a class="" href="06-encapsulation.html">
+        <span>06</span>封装
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-files-and-streams.html">
+        <span>08</span>文件与流
+      </a><a class="is-current" href="09-dunder-properties-iterators.html">
+        <span>09</span>特殊方法、属性与迭代器
+      </a><a class="" href="10-numpy-matplotlib.html">
+        <span>10</span>NumPy 与 Matplotlib
+      </a><a class="" href="11-pandas.html">
+        <span>11</span>Pandas 数据分析
+      </a><a class="" href="12-regex-json-csv.html">
+        <span>12</span>正则表达式、JSON 与 CSV
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">Python</a><span>/</span><span>Objects, files, and iteration</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">Python · Objects, files, and iteration</p>
+          <h1>特殊方法、属性与迭代器</h1>
+          <p class="note-summary">容器协议、property、可迭代对象、迭代器与生成器。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 3 min</span>
+            <span>9 / 12</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="91-特殊方法与协议" tabindex="-1">9.1 特殊方法与协议</h2>
+<h3 id="核心思想" tabindex="-1">核心思想</h3>
+<ul>
+<li>
+<p>特殊方法（双下划线开头结尾）是 Python 的<strong>协议机制</strong>：实现对应方法后，自定义对象就能像列表、字典等内置类型一样，使用原生语法操作。</p>
+</li>
+<li>
+<p>常见语法与特殊方法的对应关系：</p>
+<ul>
+<li><code>obj[i]</code> → 自动调用 <code>__getitem__</code></li>
+<li><code>obj[i] = x</code> → 自动调用 <code>__setitem__</code></li>
+<li><code>len(obj)</code> → 自动调用 <code>__len__</code></li>
+<li><code>for x in obj</code> → 自动调用 <code>__iter__</code> + <code>__next__</code></li>
+<li><code>next(it)</code> → 自动调用 <code>__next__</code></li>
+</ul>
+</li>
+<li>
+<p>意义：保证对象行为的一致性，让自定义类型无缝融入 Python 的语法体系。</p>
+</li>
+</ul>
+<h2 id="92-容器协议与自定义容器" tabindex="-1">9.2 容器协议与自定义容器</h2>
+<p>容器是用于保存多个元素的对象大类，序列、字典、集合都属于容器。通过实现容器相关特殊方法，可以自定义具备原生容器行为的对象。</p>
+<h3 id="核心容器特殊方法" tabindex="-1">核心容器特殊方法</h3>
+<h4 id="1-__len__" tabindex="-1">1. <code>__len__</code></h4>
+<ul>
+<li>作用：定义对象的长度计算规则，支持 <code>len(obj)</code> 语法</li>
+<li>触发时机：调用 <code>len()</code> 函数时自动执行</li>
+<li>适用场景：自定义序列、字典、集合类对象</li>
+</ul>
+<h4 id="2-__getitem__" tabindex="-1">2. <code>__getitem__</code></h4>
+<ul>
+<li>作用：定义下标取值的逻辑，支持 <code>obj[index]</code> 语法</li>
+<li>触发时机：使用中括号访问元素时自动执行</li>
+<li>扩展能力：不仅可以模仿列表的索引取值，还能自定义专属的取值规则（如按需计算的无穷序列，无需真实存储所有元素）</li>
+</ul>
+<h4 id="3-__setitem__" tabindex="-1">3. <code>__setitem__</code></h4>
+<ul>
+<li>作用：定义下标赋值的逻辑，支持 <code>obj[key] = value</code> 语法</li>
+<li>触发时机：使用中括号给元素赋值时自动执行</li>
+<li>常与 <code>__getitem__</code> 配套使用，完整实现类序列 / 类字典的读写能力</li>
+</ul>
+<h4 id="4-__delitem__" tabindex="-1">4. <code>__delitem__</code></h4>
+<ul>
+<li>作用：定义删除元素的逻辑，支持 <code>del obj[key]</code> 语法</li>
+<li>触发时机：使用 del 删除指定元素时自动执行</li>
+<li>作为容器协议的补充，完善增删改查的完整能力</li>
+</ul>
+<h3 id="内建类型子类化" tabindex="-1">内建类型子类化</h3>
+<ul>
+<li>可以直接继承内置类型（如 <code>list</code>、<code>dict</code>）扩展功能，只需重写需要修改的方法，其余行为全部复用父类。</li>
+<li>示例：<code>CounterList</code> 继承 <code>list</code>，新增访问计数器，每次下标访问时计数；<code>reverse</code>、<code>append</code> 等方法直接继承自原生列表。</li>
+</ul>
+<h3 id="课堂练习：bag-书包类" tabindex="-1">课堂练习：Bag 书包类</h3>
+<ul>
+<li>需求：内部用列表保存物品，支持 <code>len(bag)</code> 查数量、<code>bag[i]</code> 读元素、<code>bag[i] = x</code> 改元素</li>
+<li>实现：分别实现 <code>__len__</code>、<code>__getitem__</code>、<code>__setitem__</code>，内部代理到内置列表的对应操作</li>
+</ul>
+<h2 id="93-属性与-property" tabindex="-1">9.3 属性与 property</h2>
+<h3 id="访问器模式" tabindex="-1">访问器模式</h3>
+<ul>
+<li>传统封装方式：通过 getter/setter 方法间接访问私有属性，实现数据校验、逻辑控制</li>
+<li>缺点：调用必须显式写方法名，不符合属性访问的自然语法</li>
+</ul>
+<h3 id="property-属性描述器" tabindex="-1">property 属性描述器</h3>
+<h4 id="核心作用" tabindex="-1">核心作用</h4>
+<p>将属性的读、写、删操作转化为方法调用，<strong>对外保持属性访问的简洁写法，对内拥有方法的控制能力</strong>，兼顾使用体验与封装性。</p>
+<h4 id="两种常用形式" tabindex="-1">两种常用形式</h4>
+<ol>
+<li>
+<p><strong>可读写属性</strong></p>
+<ul>
+<li>用 <code>@property</code> 装饰 getter 方法（方法名即为对外的属性名）</li>
+<li>用 <code>@属性名.setter</code> 装饰 setter 方法</li>
+<li>典型场景：成绩属性，赋值时自动校验 0~100 的合法范围</li>
+</ul>
+</li>
+<li>
+<p><strong>只读计算属性</strong></p>
+<ul>
+<li>仅实现 getter，不提供 setter</li>
+<li>适合根据已有属性动态计算得出的值（如成绩等级、是否及格），外部无法直接修改</li>
+</ul>
+</li>
+</ol>
+<h3 id="课堂练习：course-课程类" tabindex="-1">课堂练习：Course 课程类</h3>
+<ul>
+<li>需求：<code>score</code> 属性带 0~100 范围校验，<code>passed</code> 只读属性（分数≥60 返回 <code>True</code>）</li>
+<li>实现：<code>score</code> 用 property + setter 做校验，<code>passed</code> 仅用 property 实现动态计算逻辑</li>
+</ul>
+<h2 id="94-可迭代对象与迭代器" tabindex="-1">9.4 可迭代对象与迭代器</h2>
+<h3 id="for-循环的底层本质" tabindex="-1">for 循环的底层本质</h3>
+<p>python</p>
+<p>运行</p>
+<pre class="hljs"><code>for x in obj:
+    print(x)
+</code></pre>
+<p>等价执行流程：</p>
+<ol>
+<li>调用 <code>iter(obj)</code> 获取迭代器 <code>it</code></li>
+<li>循环调用 <code>next(it)</code> 逐个取值</li>
+<li>捕获 <code>StopIteration</code> 异常时终止循环</li>
+</ol>
+<h3 id="两个核心概念" tabindex="-1">两个核心概念</h3>
+<p>表格</p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>定义</th>
+<th>核心方法</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可迭代对象</td>
+<td>可以被 for 遍历的对象（数据来源）</td>
+<td><code>__iter__</code></td>
+<td>本身不负责逐个取值，只负责提供迭代器</td>
+</tr>
+<tr>
+<td>迭代器</td>
+<td>负责逐个产出元素的执行对象</td>
+<td><code>__iter__</code> + <code>__next__</code></td>
+<td>记录当前位置，逐次前进，用完即耗尽</td>
+</tr>
+</tbody>
+</table>
+<h3 id="两个核心特殊方法" tabindex="-1">两个核心特殊方法</h3>
+<ol>
+<li>
+<p><strong><code>__iter__</code></strong></p>
+<ul>
+<li>触发：<code>iter(obj)</code> 时调用</li>
+<li>作用：返回一个迭代器对象</li>
+<li>迭代器自身的 <code>__iter__</code> 会返回自身</li>
+</ul>
+</li>
+<li>
+<p><strong><code>__next__</code></strong></p>
+<ul>
+<li>触发：<code>next(it)</code> 时调用</li>
+<li>作用：返回下一个元素</li>
+<li>结束规则：无更多元素时抛出 <code>StopIteration</code> 异常，作为循环结束的信号</li>
+</ul>
+</li>
+</ol>
+<h3 id="关键特性" tabindex="-1">关键特性</h3>
+<ul>
+<li><strong>列表可反复遍历</strong>：列表是可迭代对象，每次 <code>iter(列表)</code> 都会生成全新的独立迭代器，互不干扰。</li>
+<li><strong>迭代器只能使用一次</strong>：迭代器会持续记录当前位置，元素取完后不会自动重置，再次调用 <code>next()</code> 会直接抛出异常。</li>
+</ul>
+<h2 id="95-生成器" tabindex="-1">9.5 生成器</h2>
+<h3 id="生成器函数" tabindex="-1">生成器函数</h3>
+<ul>
+<li>
+<p>定义：包含 <code>yield</code> 关键字的函数，本质是<strong>更简洁的迭代器实现方式</strong></p>
+</li>
+<li>
+<p>执行特点：</p>
+<ol>
+<li>调用生成器函数不会立即执行函数体，而是返回一个生成器对象</li>
+<li>执行到 <code>yield</code> 时暂停，保留当前所有运行状态，并产出对应的值</li>
+<li>下一次调用 <code>next()</code> 时，从上次暂停的位置继续执行</li>
+</ol>
+</li>
+<li>
+<p>与普通函数对比：普通函数 <code>return</code> 一次性返回全部结果；生成器 <code>yield</code> 逐个产出结果，适合大数据量、流式处理场景，显著节省内存。</p>
+</li>
+</ul>
+<h3 id="生成器表达式" tabindex="-1">生成器表达式</h3>
+<ul>
+<li>语法：<code>(表达式 for 变量 in 可迭代对象)</code>，形式与列表推导式类似，使用圆括号</li>
+<li>特点：不会一次性生成所有元素，按需计算，内存效率远高于列表推导式</li>
+</ul>
+<h3 id="递归生成器与-yield-from" tabindex="-1">递归生成器与 yield from</h3>
+<ul>
+<li><code>yield from 子生成器</code>：将子生成器的所有元素逐个向外产出，大幅简化递归生成器的写法</li>
+<li>等价于手动遍历子生成器，逐个 <code>yield</code> 元素</li>
+<li>典型应用：展开任意深度的嵌套列表 / 元组</li>
+</ul>
+<h3 id="典型应用场景" tabindex="-1">典型应用场景</h3>
+<ul>
+<li>超大数据量序列：避免一次性加载全部内容到内存</li>
+<li>流式输出：如大模型对话的逐字返回效果</li>
+<li>嵌套结构扁平化：多层嵌套容器的一维展开</li>
+</ul>
+<h3 id="课堂练习：gen_even-偶数生成器" tabindex="-1">课堂练习：gen_even 偶数生成器</h3>
+<ul>
+<li>需求：依次产生 0, 2, 4 … 共 n 个偶数</li>
+<li>实现：循环配合 <code>yield</code> 逐个产出数值</li>
+</ul>
+<h2 id="96-综合案例" tabindex="-1">9.6 综合案例</h2>
+<h3 id="aimessagelog-消息日志" tabindex="-1">AIMessageLog 消息日志</h3>
+<ul>
+<li>内部用列表存储消息，实现 <code>__len__</code>、<code>__getitem__</code>、<code>__iter__</code></li>
+<li>对外表现出和列表一致的使用体验，同时封装消息添加等业务方法</li>
+</ul>
+<h3 id="learningsession-学习记录" tabindex="-1">LearningSession 学习记录</h3>
+<ul>
+<li>
+<p>融合三种能力：</p>
+<ol>
+<li>容器行为：<code>__len__</code>、<code>__getitem__</code>、<code>__iter__</code> 支持原生遍历与访问</li>
+<li>业务校验：添加成绩时校验分数范围</li>
+<li>计算属性：<code>average_score</code> 用 property 实现，动态计算平均分</li>
+</ol>
+</li>
+</ul>
+<h3 id="迭代器常见-bug" tabindex="-1">迭代器常见 Bug</h3>
+<ul>
+<li>错误写法：<code>__next__</code> 只返回值、不更新当前状态 → 永远返回同一个值，造成死循环</li>
+<li>修正方式：先保存当前值，更新位置计数器，再返回旧值</li>
+</ul>
+<h2 id="本章小结" tabindex="-1">本章小结</h2>
+<ol>
+<li>特殊方法是 Python 的对象协议，实现对应方法即可让自定义对象无缝支持原生语法</li>
+<li>容器协议通过 <code>__len__</code>、<code>__getitem__</code>、<code>__setitem__</code>、<code>__delitem__</code> 实现类序列 / 类字典的原生行为</li>
+<li>property 将方法包装为属性访问形式，兼顾语法简洁性与数据校验、封装能力</li>
+<li>可迭代对象实现 <code>__iter__</code> 提供迭代器；迭代器实现 <code>__iter__</code> + <code>__next__</code> 逐个产出元素，结束时抛出 <code>StopIteration</code></li>
+<li>生成器是简化版迭代器，通过 <code>yield</code> 实现暂停 - 继续的执行模式，内存效率高，适合流式、超大数据场景</li>
+<li>面向对象设计的进阶：不止是定义类和方法，更要让对象融入 Python 的语法体系，符合语言原生的使用习惯</li>
+</ol>
+<h2 id="课堂练习" tabindex="-1">课堂练习</h2>
+<ol>
+<li>实现 Bag 类，支持 len ()、下标读取、下标修改</li>
+<li>实现 Course 类，带校验的 score 属性与只读的 passed 属性</li>
+<li>实现 gen_even 偶数生成器，分别用 for 和 next () 测试</li>
+<li>排查并修复有死循环问题的自定义迭代器</li>
+</ol>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="08-files-and-streams.html"><span>Previous</span><strong>文件与流</strong></a>
+    <a class="next" href="10-numpy-matplotlib.html"><span>Next</span><strong>NumPy 与 Matplotlib</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#91-特殊方法与协议">9.1 特殊方法与协议</a><a class="toc-level-3" href="#核心思想">核心思想</a><a class="toc-level-2" href="#92-容器协议与自定义容器">9.2 容器协议与自定义容器</a><a class="toc-level-3" href="#核心容器特殊方法">核心容器特殊方法</a><a class="toc-level-3" href="#内建类型子类化">内建类型子类化</a><a class="toc-level-3" href="#课堂练习：bag-书包类">课堂练习：Bag 书包类</a><a class="toc-level-2" href="#93-属性与-property">9.3 属性与 property</a><a class="toc-level-3" href="#访问器模式">访问器模式</a><a class="toc-level-3" href="#property-属性描述器">property 属性描述器</a><a class="toc-level-3" href="#课堂练习：course-课程类">课堂练习：Course 课程类</a><a class="toc-level-2" href="#94-可迭代对象与迭代器">9.4 可迭代对象与迭代器</a><a class="toc-level-3" href="#for-循环的底层本质">for 循环的底层本质</a><a class="toc-level-3" href="#两个核心概念">两个核心概念</a><a class="toc-level-3" href="#两个核心特殊方法">两个核心特殊方法</a><a class="toc-level-3" href="#关键特性">关键特性</a><a class="toc-level-2" href="#95-生成器">9.5 生成器</a><a class="toc-level-3" href="#生成器函数">生成器函数</a><a class="toc-level-3" href="#生成器表达式">生成器表达式</a><a class="toc-level-3" href="#递归生成器与-yield-from">递归生成器与 yield from</a><a class="toc-level-3" href="#典型应用场景">典型应用场景</a><a class="toc-level-3" href="#课堂练习：gen_even-偶数生成器">课堂练习：gen even 偶数生成器</a><a class="toc-level-2" href="#96-综合案例">9.6 综合案例</a><a class="toc-level-3" href="#aimessagelog-消息日志">AIMessageLog 消息日志</a><a class="toc-level-3" href="#learningsession-学习记录">LearningSession 学习记录</a><a class="toc-level-3" href="#迭代器常见-bug">迭代器常见 Bug</a><a class="toc-level-2" href="#本章小结">本章小结</a><a class="toc-level-2" href="#课堂练习">课堂练习</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

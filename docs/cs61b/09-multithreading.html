@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="线程生命周期、创建方式、同步、锁与并发安全。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="多线程 · Mingjv Li Notes">
+  <meta property="og:description" content="线程生命周期、创建方式、同步、锁与并发安全。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>多线程 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-teal">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS61B</a><span>Java 与数据结构</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-java-oop-encapsulation.html">
+        <span>01</span>Java 面向对象与封装
+      </a><a class="" href="02-inheritance-interfaces.html">
+        <span>02</span>继承、抽象类与接口
+      </a><a class="" href="03-polymorphism-inner-classes.html">
+        <span>03</span>多态与内部类
+      </a><a class="" href="04-generics.html">
+        <span>04</span>Java 泛型
+      </a><a class="" href="05-java-api.html">
+        <span>05</span>Java API：字符串、包装类与正则
+      </a><a class="" href="06-collections-iterators.html">
+        <span>06</span>集合与迭代器
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-io-streams.html">
+        <span>08</span>文件与 IO 流
+      </a><a class="is-current" href="09-multithreading.html">
+        <span>09</span>多线程
+      </a><a class="" href="10-network-programming.html">
+        <span>10</span>网络编程
+      </a><a class="" href="11-adt-and-algorithms.html">
+        <span>11</span>ADT 与算法基础
+      </a><a class="" href="12-linear-lists.html">
+        <span>12</span>线性表
+      </a><a class="" href="13-stacks-and-queues.html">
+        <span>13</span>栈与队列
+      </a><a class="" href="14-linked-lists-recursion.html">
+        <span>14</span>链表与递归数据结构
+      </a><a class="" href="15-doubly-linked-lists.html">
+        <span>15</span>双向链表与动态数组
+      </a><a class="" href="16-generic-collections.html">
+        <span>16</span>泛型集合入门
+      </a><a class="" href="17-comparable-comparator.html">
+        <span>17</span>多态、Comparable 与 Comparator
+      </a><a class="" href="18-asymptotics-union-find.html">
+        <span>18</span>增长阶与并查集
+      </a><a class="" href="19-binary-search-trees.html">
+        <span>19</span>二叉搜索树
+      </a><a class="" href="20-b-trees.html">
+        <span>20</span>B 树
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS61B</a><span>/</span><span>Java language foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS61B · Java language foundations</p>
+          <h1>多线程</h1>
+          <p class="note-summary">线程生命周期、创建方式、同步、锁与并发安全。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 3 min</span>
+            <span>9 / 20</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="一、学习目标" tabindex="-1">一、学习目标</h2>
+<ol>
+<li>理解进程与线程的概念，能够区分二者区别；</li>
+<li>掌握 3 种多线程创建方式，理解各自优缺点与适用场景；</li>
+<li>熟悉后台线程（守护线程）的作用与使用规范；</li>
+<li>掌握线程 6 种生命周期状态及状态转换规则；</li>
+<li>熟练使用线程优先级、休眠、插队、让步、中断等操作方法；</li>
+<li>理解多线程安全问题成因，掌握同步代码块、同步方法实现线程同步。</li>
+</ol>
+<h2 id="二、131-进程与线程" tabindex="-1">二、13.1 进程与线程</h2>
+<h3 id="21-进程（process）" tabindex="-1">2.1 进程（Process）</h3>
+<ol>
+<li>
+<p><strong>定义</strong></p>
+<p>进程是<strong>程序的一次运行实例</strong>，是操作系统<strong>资源分配和调度的基本单位</strong>。</p>
+</li>
+</ol>
+<ul>
+<li>程序：存放在磁盘的静态二进制文件，不占用系统资源；</li>
+<li>进程：加载到内存的动态运行体，占用内存、CPU 等资源，程序结束则进程销毁。</li>
+</ul>
+<ol start="2">
+<li>
+<p><strong>多道程序设计技术</strong></p>
+<p>单核 CPU<strong>同一时刻仅能执行一个进程</strong>。操作系统将 CPU 划分为微小<strong>时间片</strong>，多个进程分时轮流占用 CPU；因时间片极短、CPU 运算速度快，宏观上表现为多个程序并发运行。</p>
+</li>
+</ol>
+<h3 id="22-线程（thread）" tabindex="-1">2.2 线程（Thread）</h3>
+<ol>
+<li>
+<p><strong>定义</strong></p>
+<p>线程是<strong>进程内部的独立执行单元</strong>，也是 CPU 调度的最小单位。</p>
+</li>
+</ol>
+<ul>
+<li>一个进程至少包含<strong>一个主线程</strong>；</li>
+<li>单线程：程序只有一条执行路径；多线程：一个进程内多条执行路径交替运行。</li>
+</ul>
+<ol start="2">
+<li>
+<p><strong>运行特点</strong></p>
+<p>同进程内的多线程同样依靠 CPU 时间片轮转执行，<strong>微观串行、宏观并发</strong>；线程不拥有独立系统资源，<strong>共享所属进程的全部资源</strong>。</p>
+</li>
+</ol>
+<h3 id="23-进程与线程对比" tabindex="-1">2.3 进程与线程对比</h3>
+<p>表格</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>进程</th>
+<th>线程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心定位</td>
+<td>系统资源分配、调度的基本单位</td>
+<td>CPU 独立调度的最小单位</td>
+</tr>
+<tr>
+<td>资源分配</td>
+<td>拥有独立内存、运行状态等资源</td>
+<td>共享所在进程的资源，仅保留少量运行栈</td>
+</tr>
+<tr>
+<td>执行关系</td>
+<td>进程之间相互独立</td>
+<td>同进程内线程相互依赖、协作运行</td>
+</tr>
+<tr>
+<td>并发机制</td>
+<td>基于多道程序设计，分时占用 CPU</td>
+<td>进程内部多条执行路径交替抢占 CPU</td>
+</tr>
+</tbody>
+</table>
+<h2 id="三、132-线程的创建方式-后台线程" tabindex="-1">三、13.2 线程的创建方式 &amp; 后台线程</h2>
+<p>Java 提供<strong>三种主流多线程创建方式</strong>，各有适用场景；同时支持后台线程与 Lambda 简化写法。</p>
+<h3 id="31-方式一：继承-thread-类" tabindex="-1">3.1 方式一：继承 <code>Thread</code> 类</h3>
+<h4 id="实现步骤" tabindex="-1">实现步骤</h4>
+<ol>
+<li>自定义类继承 <code>java.lang.Thread</code>；</li>
+<li>重写 <code>run()</code> 方法（线程核心执行逻辑）；</li>
+<li>创建线程对象，调用 <code>start()</code> 启动线程（JVM 自动调用 <code>run()</code>）。</li>
+</ol>
+<h4 id="代码示例" tabindex="-1">代码示例</h4>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>public class Example02 {
+    public static void main(String[] args) {
+        MyThread02 myThread = new MyThread02();
+        myThread.start(); // 启动线程，不能直接调用run()
+
+        while (true) {
+            System.out.println(&quot;main()方法在运行&quot;);
+        }
+    }
+}
+
+// 继承Thread类
+class MyThread02 extends Thread {
+    @Override
+    public void run() {
+        while (true) {
+            System.out.println(&quot;MyThread类的run()方法在运行&quot;);
+        }
+    }
+}
+</code></pre>
+<h4 id="优缺点" tabindex="-1">优缺点</h4>
+<ul>
+<li>优点：写法简单，上手容易；</li>
+<li>缺点：受 <strong>Java 单继承</strong> 限制；多个线程无法天然共享资源（每个子类实例都是独立对象）。</li>
+</ul>
+<h3 id="32-方式二：实现-runnable-接口（推荐）" tabindex="-1">3.2 方式二：实现 <code>Runnable</code> 接口（推荐）</h3>
+<h4 id="实现步骤-1" tabindex="-1">实现步骤</h4>
+<ol>
+<li>自定义类实现 <code>java.lang.Runnable</code> 接口；</li>
+<li>重写 <code>run()</code> 方法；</li>
+<li>创建 Runnable 实现类对象，传入 <code>Thread</code> 构造器；</li>
+<li>调用 <code>Thread</code> 对象的 <code>start()</code> 启动线程。</li>
+</ol>
+<h4 id="代码示例-1" tabindex="-1">代码示例</h4>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>public class Example03 {
+    public static void main(String[] args) {
+        // 仅创建一个共享任务对象
+        MyThread03 myThread = new MyThread03();
+        Thread thread = new Thread(myThread);
+        thread.start();
+
+        while (true) {
+            System.out.println(&quot;main()方法在运行&quot;);
+        }
+    }
+}
+
+// 实现Runnable接口
+class MyThread03 implements Runnable {
+    @Override
+    public void run() {
+        while (true) {
+            System.out.println(&quot;MyThread类的run()方法在运行&quot;);
+        }
+    }
+}
+</code></pre>
+<h4 id="优缺点-1" tabindex="-1">优缺点</h4>
+<ul>
+<li>优点：规避单继承限制；<strong>天然支持多线程共享资源</strong>；代码与数据分离，扩展性强；</li>
+<li>缺点：写法略繁琐。</li>
+</ul>
+<h4 id="lambda-表达式简化（函数式接口特性）" tabindex="-1">Lambda 表达式简化（函数式接口特性）</h4>
+<p><code>Runnable</code> 是函数式接口，可直接简写，无需定义独立实现类：</p>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>Thread t = new Thread(() -&gt; {
+    System.out.println(&quot;新线程执行逻辑&quot;);
+});
+t.start();
+</code></pre>
+<h4 id="资源共享说明" tabindex="-1">资源共享说明</h4>
+<p>售票案例验证：仅创建<strong>一个 Runnable 任务对象</strong>，多个 <code>Thread</code> 线程共用该对象，所有线程操作同一份共享数据，解决资源隔离问题。</p>
+<h3 id="33-方式三：实现-callable-接口（高级用法）" tabindex="-1">3.3 方式三：实现 <code>Callable</code> 接口（高级用法）</h3>
+<h4 id="适用场景" tabindex="-1">适用场景</h4>
+<p><code>Thread</code>、<code>Runnable</code> 的 <code>run()</code> 方法<strong>无返回值、无法抛出受检异常</strong>；<code>Callable</code> 专门解决该问题，适用于需要获取线程异步执行结果的场景。</p>
+<h4 id="实现步骤-2" tabindex="-1">实现步骤</h4>
+<ol>
+<li>自定义类实现 <code>java.util.concurrent.Callable&lt;T&gt;</code> 泛型接口；</li>
+<li>重写 <code>call()</code> 方法（有返回值、可抛出异常）；</li>
+<li>使用 <code>FutureTask</code> 封装 <code>Callable</code> 对象；</li>
+<li>将 <code>FutureTask</code> 传入 <code>Thread</code> 构造器，调用 <code>start()</code> 启动线程；</li>
+<li>调用 <code>FutureTask.get()</code> 获取线程执行结果（<strong>阻塞方法</strong>）。</li>
+</ol>
+<h4 id="代码示例-2" tabindex="-1">代码示例</h4>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+public class Example04 {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        MyThread04 myThread = new MyThread04();
+        FutureTask&lt;Object&gt; ft1 = new FutureTask&lt;&gt;(myThread);
+        Thread thread1 = new Thread(ft1, &quot;thread&quot;);
+        thread1.start();
+
+        // get() 会阻塞主线程，等待子线程执行完毕
+        System.out.println(&quot;线程返回结果：&quot; + ft1.get());
+        System.out.println(&quot;main()方法在运行&quot;);
+    }
+}
+
+// 实现Callable接口
+class MyThread04 implements Callable&lt;Object&gt; {
+    @Override
+    public Object call() throws Exception {
+        int i = 0;
+        while (i++ &lt; 5) {
+            System.out.println(Thread.currentThread().getName() + &quot;的call()方法在运行&quot;);
+        }
+        return i;
+    }
+}
+</code></pre>
+<h4 id="future-接口常用方法" tabindex="-1">Future 接口常用方法</h4>
+<p>表格</p>
+<table>
+<thead>
+<tr>
+<th>方法声明</th>
+<th>功能描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>boolean cancel(boolean mayInterruptIfRunning)</code></td>
+<td>取消任务，参数表示是否中断正在运行的任务</td>
+</tr>
+<tr>
+<td><code>boolean isCancelled()</code></td>
+<td>判断任务是否在完成前被取消</td>
+</tr>
+<tr>
+<td><code>boolean isDone()</code></td>
+<td>判断任务是否执行完毕</td>
+</tr>
+<tr>
+<td><code>V get()</code></td>
+<td>阻塞式获取执行结果，等待任务完成</td>
+</tr>
+<tr>
+<td><code>V get(long timeout, TimeUnit unit)</code></td>
+<td>限时获取结果，超时直接返回</td>
+</tr>
+</tbody>
+</table>
+<h4 id="核心说明" tabindex="-1">核心说明</h4>
+<ul>
+<li><code>FutureTask</code>：同时实现 <code>Runnable</code> 和 <code>Future</code>，是连接线程与返回值的桥梁；</li>
+<li><code>get()</code> 阻塞特性：主线程会暂停，直到子线程执行完成才继续运行。</li>
+</ul>
+<h3 id="34-三种创建方式总结" tabindex="-1">3.4 三种创建方式总结</h3>
+<ol>
+<li><strong>继承 Thread</strong>：写法简单，单继承受限，不适合资源共享；</li>
+<li><strong>实现 Runnable</strong>：无继承限制，支持资源共享，<strong>日常开发首选</strong>；</li>
+<li><strong>实现 Callable</strong>：支持返回值、抛出异常，用于异步计算、需要获取结果的场景。</li>
+</ol>
+<h3 id="35-后台线程（守护线程-daemon-thread）" tabindex="-1">3.5 后台线程（守护线程 Daemon Thread）</h3>
+<ol>
+<li><strong>线程分类</strong></li>
+</ol>
+<ul>
+<li><strong>前台线程（默认）</strong>：程序运行的核心支柱，只要有一个前台线程存活，Java 进程就不会终止；</li>
+<li><strong>后台线程</strong>：依附前台线程运行，典型应用：JVM 垃圾回收 (GC)。<strong>所有前台线程结束后，后台线程会被强制终止</strong>。</li>
+</ul>
+<ol start="2">
+<li>
+<p><strong>使用规则（强制）</strong></p>
+<p><code>setDaemon(true)</code> 设置后台线程 <mark><strong>必须在 <code>start()</code> 之前调用</strong></mark>，启动后设置无效且会抛出异常。</p>
+</li>
+<li>
+<p><strong>判断方法</strong>：<code>isDaemon()</code>，返回 <code>true</code> 表示为后台线程。</p>
+</li>
+</ol>
+<h2 id="四、133-线程的生命周期及状态转换" tabindex="-1">四、13.3 线程的生命周期及状态转换</h2>
+<p>Java 线程生命周期共包含 <strong>6 种核心状态</strong>，线程会根据运行条件在不同状态间切换。</p>
+<h3 id="41-六大状态详解" tabindex="-1">4.1 六大状态详解</h3>
+<ol>
+<li>
+<p><strong>新建状态（New）</strong></p>
+<p>仅创建线程对象，未调用 <code>start()</code>；JVM 仅分配内存，线程无执行行为。</p>
+</li>
+<li>
+<p><strong>可运行状态（Runnable / 就绪态）</strong></p>
+<p>调用 <code>start()</code> 后进入该状态，线程具备运行条件，进入队列<strong>等待 CPU 调度</strong>（JVM 将 “运行中” 也归为此状态）。</p>
+</li>
+<li>
+<p><strong>锁阻塞状态（Blocked）</strong></p>
+<p>线程尝试获取<strong>同步锁</strong>失败时进入该状态；持有锁的线程释放锁后，当前线程回到可运行状态。</p>
+</li>
+<li>
+<p><strong>无限等待状态（Waiting）</strong></p>
+<p>调用无参 <code>wait()</code> 等方法进入，<strong>无法自动唤醒</strong>；必须由其他线程调用 <code>notify()</code> / <code>notifyAll()</code> 唤醒。</p>
+</li>
+<li>
+<p><strong>计时等待状态（Timed_Waiting）</strong></p>
+<p>调用 <code>sleep(long)</code>、<code>join(long)</code>、<code>wait(long)</code> 等带时间参数的方法进入；等待超时或被唤醒后，恢复可运行状态。</p>
+</li>
+<li>
+<p><strong>被终止状态（Terminated）</strong></p>
+<p><code>run()</code> 方法正常执行完毕，或出现未捕获异常，线程生命周期结束。</p>
+</li>
+</ol>
+<h3 id="42-核心状态转换规则" tabindex="-1">4.2 核心状态转换规则</h3>
+<ol>
+<li>新建 → 可运行：调用 <code>start()</code>；</li>
+<li>可运行 → 锁阻塞：获取同步锁失败；锁阻塞 → 可运行：成功获取锁；</li>
+<li>可运行 → 无限等待 / 计时等待：调用对应等待方法；</li>
+<li>等待状态 → 可运行：被唤醒 / 等待超时 + 成功获取锁；</li>
+<li>所有状态最终均可转为<strong>被终止状态</strong>。</li>
+</ol>
+<h2 id="五、134-线程操作的相关方法" tabindex="-1">五、13.4 线程操作的相关方法</h2>
+<h3 id="51-线程优先级" tabindex="-1">5.1 线程优先级</h3>
+<ol>
+<li>取值范围：<code>1 ~ 10</code>，数字越大优先级越高。</li>
+<li>Thread 静态常量：</li>
+</ol>
+<ul>
+<li><code>MIN_PRIORITY = 1</code>（最低优先级）</li>
+<li><code>NORM_PRIORITY = 5</code>（默认优先级）</li>
+<li><code>MAX_PRIORITY = 10</code>（最高优先级）</li>
+</ul>
+<ol start="3">
+<li>
+<p>设置方法：<code>setPriority(int newPriority)</code>。</p>
+</li>
+<li>
+<p>注意事项：</p>
+<p>优先级仅<strong>提高获取 CPU 时间片的概率</strong>，不保证绝对执行顺序；受操作系统调度影响，<strong>不可作为核心业务逻辑依据</strong>。</p>
+</li>
+</ol>
+<h3 id="52-线程休眠-sleeplong-ms" tabindex="-1">5.2 线程休眠 <code>sleep(long ms)</code></h3>
+<ol>
+<li>静态方法，仅作用于<strong>当前执行线程</strong>；</li>
+<li>效果：线程进入<strong>计时等待状态</strong>，休眠指定毫秒；休眠结束后进入就绪队列，不会立即运行；</li>
+<li>特性：休眠期间<strong>不会释放同步锁</strong>；必须捕获 / 抛出 <code>InterruptedException</code>。</li>
+</ol>
+<h3 id="53-线程插队-join" tabindex="-1">5.3 线程插队 <code>join()</code></h3>
+<ol>
+<li>作用：改变执行顺序，让指定线程独占 CPU，并行转为串行。</li>
+<li>重载方法：</li>
+</ol>
+<ul>
+<li>无参 <code>join()</code>：当前线程阻塞，<strong>直到被插队线程完全执行完毕</strong>；</li>
+<li>有参 <code>join(long ms)</code>：仅阻塞指定毫秒，超时后线程重新竞争 CPU。</li>
+</ul>
+<ol start="3">
+<li>应用场景：主线程需要等待子线程执行完成后，再继续后续逻辑。</li>
+</ol>
+<h3 id="54-线程让步-yield" tabindex="-1">5.4 线程让步 <code>yield()</code></h3>
+<ol>
+<li>静态方法，当前线程从<strong>运行态退回就绪态</strong>，主动让出 CPU；</li>
+<li>核心特性：线程<strong>不会阻塞</strong>，仍留在就绪队列参与竞争；无法保证其他线程一定获得执行权。</li>
+</ol>
+<h3 id="55-线程中断-interrupt" tabindex="-1">5.5 线程中断 <code>interrupt()</code></h3>
+<ol>
+<li>核心误区：<code>interrupt()</code> <strong>不会强制杀死线程</strong>，仅给线程打上<strong>中断标记</strong>（发送停止建议）。</li>
+<li>核心方法：</li>
+</ol>
+<ul>
+<li><code>interrupt()</code>：设置中断标记；</li>
+<li><code>isInterrupted()</code>：检测中断标记状态。</li>
+</ul>
+<ol start="3">
+<li>执行逻辑：线程需要<strong>主动检测标记</strong>，通过 <code>break</code> / <code>return</code> 实现优雅退出；未检测则线程继续运行。</li>
+<li>补充：已终止的线程，设置中断标记无效。</li>
+</ol>
+<h2 id="六、135-线程同步" tabindex="-1">六、13.5 线程同步</h2>
+<h3 id="61-线程安全问题" tabindex="-1">6.1 线程安全问题</h3>
+<ol>
+<li><strong>问题现象</strong>（售票案例）：同一张票被多次售卖、卖出票号为 0 或负数。</li>
+<li><strong>成因</strong></li>
+</ol>
+<ul>
+<li>多线程并发读写<strong>同一共享资源</strong>，无访问限制；</li>
+<li>资源操作为<strong>非原子操作</strong>（如 <code>tickets--</code> 分为：读取 → 自减 → 写回三步，可被打断）；</li>
+<li><code>sleep()</code> 等方法会放大线程竞争问题。</li>
+</ul>
+<h3 id="62-解决方案一：同步代码块" tabindex="-1">6.2 解决方案一：同步代码块</h3>
+<h4 id="语法格式" tabindex="-1">语法格式</h4>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>synchronized(锁对象) {
+    // 操作共享资源的核心代码
+}
+</code></pre>
+<h4 id="运行原理" tabindex="-1">运行原理</h4>
+<p>同一时刻<strong>仅允许一个线程进入同步代码块</strong>，其他线程获取锁失败则进入阻塞状态；线程执行完毕后释放锁，其他线程重新竞争。</p>
+<h4 id="代码示例（售票案例）" tabindex="-1">代码示例（售票案例）</h4>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>class Ticket1 implements Runnable {
+    private int tickets = 10;
+    // 全局唯一锁对象
+    private final Object lock = new Object();
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (lock) {
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (tickets &gt; 0) {
+                    System.out.println(Thread.currentThread().getName() + &quot;---卖出的票&quot; + tickets--);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<h4 id="使用规范" tabindex="-1">使用规范</h4>
+<ul>
+<li>锁对象可以是任意 Java 对象，但<strong>所有线程必须共用同一个锁</strong>；</li>
+<li>锁对象不能在 <code>run()</code> 方法内部创建（每个线程生成新锁，同步失效）。</li>
+</ul>
+<h3 id="63-解决方案二：同步方法" tabindex="-1">6.3 解决方案二：同步方法</h3>
+<h4 id="语法格式-1" tabindex="-1">语法格式</h4>
+<p>使用 <code>synchronized</code> 修饰整个方法，本质是同步代码块的简化写法。</p>
+<p>java</p>
+<p>运行</p>
+<pre class="hljs"><code>// 同步方法
+private synchronized void saleTicket() {
+    if (tickets &gt; 0) {
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(Thread.currentThread().getName() + &quot;---卖出的票&quot; + tickets--);
+    }
+}
+</code></pre>
+<h4 id="锁对象规则" tabindex="-1">锁对象规则</h4>
+<ol>
+<li>非静态同步方法：默认锁对象为 <code>this</code>（当前实例）；</li>
+<li>静态同步方法：默认锁对象为<strong>当前类的 Class 对象</strong>。</li>
+</ol>
+<h4 id="效果" tabindex="-1">效果</h4>
+<p>与同步代码块一致，保证同一时间仅有一个线程执行方法，解决线程安全问题。</p>
+<h2 id="七、本章总结" tabindex="-1">七、本章总结</h2>
+<ol>
+<li><strong>基础概念</strong>：进程是资源分配单位，线程是 CPU 调度单位，一个进程可包含多个线程，线程共享进程资源；</li>
+<li><strong>线程创建</strong>：3 种方式各有侧重，<code>Runnable</code> 为日常首选，<code>Callable</code> 用于需要返回值的异步场景；</li>
+<li><strong>后台线程</strong>：依附前台线程运行，必须在 <code>start()</code> 前设置守护状态；</li>
+<li><strong>生命周期</strong>：牢记 6 种线程状态及转换条件，理解线程阻塞、等待、运行的切换逻辑；</li>
+<li><strong>线程方法</strong>：优先级、休眠、插队、让步、中断是线程调度核心，重点区分各方法特性与误区；</li>
+<li><strong>线程同步</strong>：多线程操作共享资源会引发安全问题，通过 <strong>同步代码块、同步方法</strong>（<code>synchronized</code>）实现线程同步，保证数据安全。</li>
+</ol>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="08-io-streams.html"><span>Previous</span><strong>文件与 IO 流</strong></a>
+    <a class="next" href="10-network-programming.html"><span>Next</span><strong>网络编程</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#一、学习目标">一、学习目标</a><a class="toc-level-2" href="#二、131-进程与线程">二、13.1 进程与线程</a><a class="toc-level-3" href="#21-进程（process）">2.1 进程（Process）</a><a class="toc-level-3" href="#22-线程（thread）">2.2 线程（Thread）</a><a class="toc-level-3" href="#23-进程与线程对比">2.3 进程与线程对比</a><a class="toc-level-2" href="#三、132-线程的创建方式-后台线程">三、13.2 线程的创建方式 &amp; 后台线程</a><a class="toc-level-3" href="#31-方式一：继承-thread-类">3.1 方式一：继承 Thread 类</a><a class="toc-level-3" href="#32-方式二：实现-runnable-接口（推荐）">3.2 方式二：实现 Runnable 接口（推荐）</a><a class="toc-level-3" href="#33-方式三：实现-callable-接口（高级用法）">3.3 方式三：实现 Callable 接口（高级用法）</a><a class="toc-level-3" href="#34-三种创建方式总结">3.4 三种创建方式总结</a><a class="toc-level-3" href="#35-后台线程（守护线程-daemon-thread）">3.5 后台线程（守护线程 Daemon Thread）</a><a class="toc-level-2" href="#四、133-线程的生命周期及状态转换">四、13.3 线程的生命周期及状态转换</a><a class="toc-level-3" href="#41-六大状态详解">4.1 六大状态详解</a><a class="toc-level-3" href="#42-核心状态转换规则">4.2 核心状态转换规则</a><a class="toc-level-2" href="#五、134-线程操作的相关方法">五、13.4 线程操作的相关方法</a><a class="toc-level-3" href="#51-线程优先级">5.1 线程优先级</a><a class="toc-level-3" href="#52-线程休眠-sleeplong-ms">5.2 线程休眠 sleep(long ms)</a><a class="toc-level-3" href="#53-线程插队-join">5.3 线程插队 join()</a><a class="toc-level-3" href="#54-线程让步-yield">5.4 线程让步 yield()</a><a class="toc-level-3" href="#55-线程中断-interrupt">5.5 线程中断 interrupt()</a><a class="toc-level-2" href="#六、135-线程同步">六、13.5 线程同步</a><a class="toc-level-3" href="#61-线程安全问题">6.1 线程安全问题</a><a class="toc-level-3" href="#62-解决方案一：同步代码块">6.2 解决方案一：同步代码块</a><a class="toc-level-3" href="#63-解决方案二：同步方法">6.3 解决方案二：同步方法</a><a class="toc-level-2" href="#七、本章总结">七、本章总结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

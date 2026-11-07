@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="函数间隔、几何间隔、最优间隔分类器、拉格朗日对偶与 KKT。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="支持向量机 · Mingjv Li Notes">
+  <meta property="og:description" content="函数间隔、几何间隔、最优间隔分类器、拉格朗日对偶与 KKT。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>支持向量机 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-blue" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-blue">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS229</a><span>Machine Learning</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-linear-regression.html">
+        <span>01</span>线性回归与梯度下降
+      </a><a class="" href="02-weighted-logistic-regression.html">
+        <span>02</span>局部加权与逻辑回归
+      </a><a class="" href="03-perceptron-glm.html">
+        <span>03</span>感知机与广义线性模型
+      </a><a class="" href="04-softmax-regression.html">
+        <span>04</span>Softmax 回归
+      </a><a class="" href="05-gda-naive-bayes.html">
+        <span>05</span>GDA 与朴素贝叶斯
+      </a><a class="is-current" href="06-support-vector-machines.html">
+        <span>06</span>支持向量机
+      </a><a class="" href="07-kernels.html">
+        <span>07</span>核方法与 SVM 对偶
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS229</a><span>/</span><span>Margins, duality, and kernels</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS229 · Margins, duality, and kernels</p>
+          <h1>支持向量机</h1>
+          <p class="note-summary">函数间隔、几何间隔、最优间隔分类器、拉格朗日对偶与 KKT。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>6 / 7</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h1 id="cs229-·-support-vector-machines（支持向量机）" tabindex="-1">CS229 · Support Vector Machines（支持向量机）</h1>
+<blockquote>
+<p><strong>课程</strong>：Stanford CS229 (Autumn 2018) · Andrew Ng
+<strong>本讲主题</strong>：间隔（margin）直觉、函数间隔与几何间隔、最优间隔分类器、Lagrange 对偶与 KKT 条件、SVM 的对偶形式
+<strong>视频</strong>：<a href="https://www.youtube.com/watch?v=lDwow4aOrtg">Lecture 6 - Support Vector Machines</a></p>
+</blockquote>
+<hr>
+<h2 id="一、动机：从分对到分得自信" tabindex="-1">一、动机：从&quot;分对&quot;到&quot;分得自信&quot;</h2>
+<p>逻辑回归中 $h_\theta(x) = g(\theta^T x)$，因此 $p(y=1\mid x;\theta)$ 随 $\theta^T x$ 增大 而增大。也就是说 $\theta^T x$ 离 0 越远，我们对&quot;标签是 1&quot;就<strong>越有把握</strong>。</p>
+<p>考虑决策边界 $\theta^T x = 0$ 与下图中的三个点：</p>
+<table>
+<thead>
+<tr>
+<th>点</th>
+<th>位置</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>离边界很远</td>
+<td>预测 $y=1$ 非常自信</td>
+</tr>
+<tr>
+<td>B</td>
+<td>居中</td>
+<td>中等自信</td>
+</tr>
+<tr>
+<td>C</td>
+<td>紧贴边界</td>
+<td>边界稍微动一点，预测就可能翻转成 $y=0$</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🔑 由此产生一个朴素目标：<strong>找到一条边界，让所有训练样本既分类正确、又都离边界足够远</strong>——这就是 SVM 的&quot;大间隔&quot;思想。</p>
+</blockquote>
+<hr>
+<h2 id="二、记号：为-svm-换一套写法" tabindex="-1">二、记号：为 SVM 换一套写法</h2>
+<table>
+<thead>
+<tr>
+<th>旧（回归 / 逻辑回归）</th>
+<th>新（SVM）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$y \in {0,1}$</td>
+<td>$y \in {-1,+1}$</td>
+</tr>
+<tr>
+<td>参数 $\theta$；$h_\theta(x) = g(\theta^T x)$，用 $x_0 \equiv 1$ 吸收截距</td>
+<td>参数 $w,b$；$h_{w,b}(x) = g(w^T x + b)$，<strong>不再</strong>加 $x_0$</td>
+</tr>
+<tr>
+<td>输出概率 $p(y=1)$</td>
+<td>直接输出 $\pm 1$：$g(z) = 1$（当 $z \ge 0$），否则 $-1$</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>$b$ 显式充当原来的 $\theta_0$（截距），$w$ 相当于 $[\theta_1,\dots,\theta_d]^T$</li>
+<li>分类器<strong>直接输出 $\pm 1$</strong>（类似感知机），不经过&quot;估计 $p(y=1)$&quot;这一步</li>
+</ul>
+<hr>
+<h2 id="三、函数间隔与几何间隔" tabindex="-1">三、函数间隔与几何间隔</h2>
+<h3 id="1-函数间隔（functional-margin）" tabindex="-1">1. 函数间隔（functional margin）</h3>
+<p>单个样本的<strong>函数间隔</strong>定义为</p>
+<p>$$
+\hat\gamma^{(i)} = y^{(i)}\left(w^T x^{(i)} + b\right)
+$$</p>
+<ul>
+<li>$y^{(i)} = 1$ 时，希望 $w^Tx^{(i)}+b$ 是一个<strong>大的正数</strong></li>
+<li>$y^{(i)} = -1$ 时，希望 $w^Tx^{(i)}+b$ 是一个<strong>大的负数</strong></li>
+<li>因此 $\hat\gamma^{(i)} &gt; 0$ ⇔ <strong>分类正确</strong>（可自行验算）</li>
+</ul>
+<p>对训练集整体定义</p>
+<p>$$
+\hat\gamma = \min_{i=1,\dots,n}\hat\gamma^{(i)}
+$$</p>
+<p><strong>关键缺陷</strong>：$g$ 只依赖 $w^Tx+b$ 的<strong>符号</strong>，所以把 $(w,b)$ 换成 $(2w,2b)$ 决策边界完全不变，但函数间隔被放大 2 倍（想放大多少都行）→ <strong>函数间隔不能直接当作&quot;置信度&quot;</strong>。</p>
+<p>⇒ 需要归一化，例如强制 $|w|_2 = 1$：等价于考察 $\left(w/|w|_2,\ b/|w|_2\right)$ 的函数间隔。</p>
+<h3 id="2-几何间隔（geometric-margin）" tabindex="-1">2. 几何间隔（geometric margin）</h3>
+<p>几何间隔是样本到决策边界的<strong>真实欧氏距离</strong> $\gamma^{(i)}$。</p>
+<p>推导（图中 A 点是 $x^{(i)}$，B 是它在决策边界上的投影）：$w$ 与超平面<strong>正交</strong>，所以 $w/|w|$ 是单位法向量，且</p>
+<p>$$
+B = x^{(i)} - \gamma^{(i)}\cdot\frac{w}{|w|}
+$$</p>
+<p>B 落在决策边界上，满足 $w^TB+b=0$，代入得</p>
+<p>$$
+w^T\left(x^{(i)} - \gamma^{(i)}\frac{w}{|w|}\right) + b = 0
+\qquad\Longrightarrow\qquad
+\gamma^{(i)} = \frac{w^Tx^{(i)}+b}{|w|}
+$$</p>
+<p>上面的推导假设 $y^{(i)}=1$ 且落在正侧；写成分隔形式（对任意标签都成立）：</p>
+<p>$$
+\boxed{;\gamma^{(i)} = y^{(i)}\left(\left(\frac{w}{|w|}\right)^T x^{(i)} + \frac{b}{|w|}\right);}
+$$</p>
+<p>对训练集整体：$\gamma = \min_{i=1,\dots,n}\gamma^{(i)}$。</p>
+<p><strong>两个关键性质</strong>：</p>
+<ul>
+<li><strong>对缩放不变</strong>：$(w,b)\to(2w,2b)$ 时 $\gamma^{(i)}$ 不变 → 所以可以<strong>任意施加缩放约束</strong>（$|w|=1$、$|w|=5$、$|w_1|+|w_2|+b=2$ 都行，重新缩放即可满足）</li>
+<li>当 $|w|=1$ 时，<strong>函数间隔 = 几何间隔</strong>（两个概念之间的桥梁）</li>
+</ul>
+<hr>
+<h2 id="四、最优间隔分类器（optimal-margin-classifier）" tabindex="-1">四、最优间隔分类器（Optimal Margin Classifier）</h2>
+<p><strong>先假设训练集线性可分</strong>（存在某个超平面把正负样本完全分开）。目标是最大化几何间隔。</p>
+<h3 id="1-最直接的写法不好解" tabindex="-1">1. 最直接的写法不好解</h3>
+<p>$$
+\max_{\gamma,w,b}\ \gamma
+\qquad\text{s.t.}\qquad
+y^{(i)}\left(w^Tx^{(i)}+b\right)\ge\gamma,\ \ i=1…n,
+\qquad |w| = 1
+$$</p>
+<p>约束 $|w|=1$ 是<strong>非凸</strong>的，不能直接交给标准优化软件。</p>
+<h3 id="2-换成函数间隔当目标，仍然不好解" tabindex="-1">2. 换成函数间隔当目标，仍然不好解</h3>
+<p>利用 $\gamma = \hat\gamma/|w|$，可以去掉 $|w|=1$：</p>
+<p>$$
+\max_{\hat\gamma,w,b}\ \frac{\hat\gamma}{|w|}
+\qquad\text{s.t.}\qquad
+y^{(i)}\left(w^Tx^{(i)}+b\right)\ge\hat\gamma,\ \ i=1…n
+$$</p>
+<p>但目标 $\hat\gamma/|w|$ 依然是<strong>非凸</strong>的。</p>
+<h3 id="3-关键一步：用缩放自由度把-hatgamma-定成-1" tabindex="-1">3. 关键一步：用缩放自由度把 $\hat\gamma$ 定成 1</h3>
+<p>因为 $(w,b)$ 可以自由缩放而几何间隔不变，我们可以<strong>任意指定函数间隔的大小</strong>。取</p>
+<p>$$
+\hat\gamma = 1
+$$</p>
+<p>于是&quot;最大化 $1/|w|$“等价于&quot;<strong>最小化 $|w|^2$</strong>”：</p>
+<p>$$
+\boxed{;\min_{w,b}\ \frac{1}{2}|w|^2
+\qquad\text{s.t.}\qquad
+y^{(i)}\left(w^Tx^{(i)}+b\right)\ge 1,\ \ i=1,\dots,n;}
+$$</p>
+<ul>
+<li>现在是<strong>凸二次目标 + 线性约束</strong> → 就是标准 **QP（二次规划）**问题，用现成 QP 求解器即可</li>
+<li>这就是<strong>最优间隔分类器</strong>，也是 SVM 的出发点</li>
+</ul>
+<blockquote>
+<p>🔑 三个等价改写要记牢：<code>max γ, ‖w‖=1</code> → <code>max γ̂/‖w‖</code> → <code>min ½‖w‖², s.t. γ̂=1</code>。</p>
+</blockquote>
+<hr>
+<h2 id="五、lagrange-对偶（通往-svm-对偶形式的桥）" tabindex="-1">五、Lagrange 对偶（通往 SVM 对偶形式的桥）</h2>
+<h3 id="1-回顾：只有等式约束（lagrange-乘子法）" tabindex="-1">1. 回顾：只有等式约束（Lagrange 乘子法）</h3>
+<p>$$
+\min_w f(w)\qquad\text{s.t.}\qquad h_i(w)=0,\ i=1…l
+$$</p>
+<p>定义 Lagrangian $\mathcal{L}(w,\beta) = f(w) + \sum_{i=1}^{l}\beta_i h_i(w)$，然后令 $\nabla_w\mathcal{L}=0$、$\frac{\partial\mathcal{L}}{\partial\beta_i}=0$，解出 $w,\beta$。</p>
+<h3 id="2-推广：含不等式约束（广义-lagrangian）" tabindex="-1">2. 推广：含不等式约束（广义 Lagrangian）</h3>
+<p><strong>原问题（primal）</strong>：</p>
+<p>$$
+\min_w f(w)\qquad\text{s.t.}\qquad
+g_i(w)\le 0\ (i=1…k),\qquad h_i(w)=0\ (i=1…l)
+$$</p>
+<p><strong>广义拉格朗日函数</strong>：</p>
+<p>$$
+\mathcal{L}(w,\alpha,\beta) = f(w) + \sum_{i=1}^{k}\alpha_i g_i(w) + \sum_{i=1}^{l}\beta_i h_i(w),
+\qquad \alpha_i \ge 0
+$$</p>
+<p>（$\alpha_i$ 配不等式约束，$\beta_i$ 配等式约束。）</p>
+<p>定义（下标 P 表示 primal）：</p>
+<p>$$
+\theta_P(w) = \max_{\alpha,\beta:,\alpha_i\ge 0}\ \mathcal{L}(w,\alpha,\beta)
+$$</p>
+<ul>
+<li>若 $w$ <strong>违反</strong>约束（某个 $g_i(w)&gt;0$，或某个 $h_i(w)\ne 0$）：可取 $\alpha_i\to\infty$（或选 $\beta_i$ 的符号）使 $\theta_P(w) = +\infty$</li>
+<li>若 $w$ <strong>满足</strong>约束：$\theta_P(w) = f(w)$</li>
+</ul>
+<p>因此原问题等价于</p>
+<p>$$
+\min_w \theta_P(w) = \min_w \max_{\alpha,\beta:,\alpha_i\ge 0}\ \mathcal{L}(w,\alpha,\beta)
+$$</p>
+<p>其最优值记作 $p^*$。</p>
+<h3 id="3-对偶问题" tabindex="-1">3. 对偶问题</h3>
+<p>$$
+\theta_D(\alpha,\beta) = \min_w \mathcal{L}(w,\alpha,\beta)
+$$</p>
+<p>$$
+d^* = \max_{\alpha,\beta:,\alpha_i\ge 0}\ \theta_D(\alpha,\beta)
+= \max_{\alpha,\beta:,\alpha_i\ge 0}\ \min_w \mathcal{L}(w,\alpha,\beta)
+$$</p>
+<p>对偶问题就是把原问题的 <strong>max / min 交换顺序</strong>。</p>
+<p><strong>弱对偶（恒成立）</strong>：</p>
+<p>$$
+d^* = \max_{\alpha\ge 0,\beta}\min_w\mathcal{L}\ \le\ \min_w\max_{\alpha\ge 0,\beta}\mathcal{L} = p^*
+$$</p>
+<p>（“函数的 max-min 一定 ≤ min-max”，可自行论证。）</p>
+<h3 id="4-什么时候-dp（强对偶）" tabindex="-1">4. 什么时候 $d^<em>=p^</em>$（强对偶）</h3>
+<p>若满足：</p>
+<ul>
+<li>$f$ 与所有 $g_i$ <strong>凸</strong>（$h_i$ 是<strong>仿射</strong>的，即 $h_i(w)=a_i^Tw+b_i$）
+<ul>
+<li>$f(w)=w^Tw$ 这类二次函数是凸的；线性/仿射函数也是凸的</li>
+</ul>
+</li>
+<li>存在某个 $w$ 使所有 $g_i(w)&lt;0$（约束<strong>严格可行</strong>）</li>
+</ul>
+<p>则存在 $w^<em>,\alpha^</em>,\beta^<em>$：$w^</em>$ 是原问题最优解，$\alpha^<em>,\beta^</em>$ 是对偶问题最优解，且</p>
+<p>$$
+p^* = d^* = \mathcal{L}(w^<em>,\alpha^</em>,\beta^*)
+$$</p>
+<p>并且 $w^<em>,\alpha^</em>,\beta^*$ 满足下面的 <strong>KKT 条件</strong>。</p>
+<h3 id="5-kkt-条件（五条）" tabindex="-1">5. KKT 条件（五条）</h3>
+<p>$$
+\frac{\partial}{\partial w_i}\mathcal{L}(w^<em>,\alpha^</em>,\beta^*) = 0,\qquad i=1,\dots,d
+$$</p>
+<p>$$
+\frac{\partial}{\partial \beta_i}\mathcal{L}(w^<em>,\alpha^</em>,\beta^*) = 0,\qquad i=1,\dots,l
+$$</p>
+<p>$$
+\alpha_i^<em>,g_i(w^</em>) = 0,\qquad i=1,\dots,k
+\qquad\text{（互补松弛，dual complementarity）}
+$$</p>
+<p>$$
+g_i(w^<em>)\le 0,\qquad \alpha_i^</em>\ge 0,\qquad i=1,\dots,k
+$$</p>
+<p>并且：<strong>若某组 $w^<em>,\alpha^</em>,\beta^*$ 满足 KKT 条件，则它同时是原问题和对偶问题的最优解。</strong></p>
+<blockquote>
+<p>🔑 互补松弛 $\alpha_i^<em>g_i(w^</em>)=0$ 的含义：<strong>$\alpha_i^<em>&gt;0 \Rightarrow g_i(w^</em>)=0$</strong>，即该约束取等号（是&quot;起作用&quot;的约束）。这一条直接决定了 SVM 只有很少的<strong>支持向量</strong>，也是 SMO 算法收敛判据的来源。</p>
+</blockquote>
+<hr>
+<h2 id="六、把对偶用在最优间隔分类器上-→-svm" tabindex="-1">六、把对偶用在最优间隔分类器上 → SVM</h2>
+<h3 id="1-把约束写成标准形式" tabindex="-1">1. 把约束写成标准形式</h3>
+<p>$$
+g_i(w) = -y^{(i)}\left(w^Tx^{(i)}+b\right) + 1 \le 0
+$$</p>
+<p><strong>每个训练样本对应一个约束</strong>。（没有等式约束，所以只有 $\alpha_i$，没有 $\beta_i$。）</p>
+<p>拉格朗日函数：</p>
+<p>$$
+\mathcal{L}(w,b,\alpha) = \frac{1}{2}|w|^2 - \sum_{i=1}^{n}\alpha_i\left[y^{(i)}\left(w^Tx^{(i)}+b\right) - 1\right]
+$$</p>
+<h3 id="2-先对-wb-求极小" tabindex="-1">2. 先对 $w,b$ 求极小</h3>
+<p>$$
+\nabla_w\mathcal{L}(w,b,\alpha) = w - \sum_{i=1}^{n}\alpha_i y^{(i)}x^{(i)} = 0
+\qquad\Longrightarrow\qquad
+\boxed{;w = \sum_{i=1}^{n}\alpha_i y^{(i)}x^{(i)};}\tag{★}
+$$</p>
+<p>$$
+\frac{\partial}{\partial b}\mathcal{L}(w,b,\alpha) = \sum_{i=1}^{n}\alpha_i y^{(i)} = 0 \tag{★★}
+$$</p>
+<h3 id="3-代回，得到对偶问题" tabindex="-1">3. 代回，得到对偶问题</h3>
+<p>把 (★)(★★) 代回 $\mathcal{L}$ 并化简，得到：</p>
+<p>$$
+\boxed{;\max_{\alpha}\ W(\alpha) = \sum_{i=1}^{n}\alpha_i</p>
+<ul>
+<li>\frac{1}{2}\sum_{i,j=1}^{n}y^{(i)}y^{(j)}\alpha_i\alpha_j\left\langle x^{(i)},x^{(j)}\right\rangle;}
+$$</li>
+</ul>
+<p>$$
+\text{s.t.}\qquad \alpha_i\ge 0\ \ (i=1,\dots,n),
+\qquad \sum_{i=1}^{n}\alpha_i y^{(i)} = 0
+$$</p>
+<ul>
+<li>优化变量变成 $n$ 个 $\alpha_i$；该问题满足强对偶条件（KKT 成立），因此<strong>解对偶等价于解原问题</strong></li>
+<li>求出 $\alpha^<em>$ 后，用 (★) 还原 $w^</em>$；截距 $b^*$ 由下式给出：</li>
+</ul>
+<p>$$
+b^* = -,\frac{\max_{i:y^{(i)}=-1}w^{*T}x^{(i)} + \min_{i:y^{(i)}=1}w^{*T}x^{(i)}}{2}
+$$</p>
+<h3 id="4-支持向量（support-vectors）" tabindex="-1">4. 支持向量（Support Vectors）</h3>
+<p>由互补松弛条件：<strong>$\alpha_i&gt;0$ 只能出现在函数间隔恰好等于 1 的样本上</strong>（此时约束取等号，$g_i(w^*)=0$）。</p>
+<p>这些点正是<strong>离决策边界最近的点</strong>，称为<strong>支持向量</strong>：</p>
+<ul>
+<li>只有支持向量对 $w$ 有贡献，其余样本 $\alpha_i=0$</li>
+<li>支持向量个数通常<strong>远小于</strong>训练集规模 $n$</li>
+</ul>
+<blockquote>
+<p>图示：最大间隔超平面用实线表示，两侧虚线（间隔边界）正好穿过支持向量；例子里只有 3 个点（2 个正例、1 个负例）是支持向量。</p>
+</blockquote>
+<h3 id="5-预测：算法只用内积！" tabindex="-1">5. 预测：算法只用内积！</h3>
+<p>用 (★) 展开预测值：</p>
+<p>$$
+w^Tx+b = \left(\sum_{i=1}^{n}\alpha_i y^{(i)}x^{(i)}\right)^Tx + b
+= \sum_{i=1}^{n}\alpha_i y^{(i)}\left\langle x^{(i)},x\right\rangle + b
+$$</p>
+<p>预测规则：$w^Tx+b&gt;0$ ⇒ 预测 $y=1$，否则 $y=-1$。</p>
+<ul>
+<li>因为 $\alpha_i$ 只对支持向量非零，实际只需计算新样本 $x$ 与<strong>支持向量</strong>的内积</li>
+<li><strong>训练（对偶问题）与预测都只用内积 $\langle x^{(i)},x^{(j)}\rangle$ 表达</strong> → 这正是下一讲 <strong>kernel trick</strong> 的钥匙：把内积换成核函数 $K(x,z)$，就能在极高维（甚至无穷维）特征空间中高效工作，而完全不必显式写出 $\phi(x)$</li>
+</ul>
+<blockquote>
+<p>🔑 本讲最该带走的两条结论：</p>
+<ol>
+<li>原问题与对偶问题等价（(★)(★★) 把 $w,b$ 与 $\alpha$ 联系起来）</li>
+<li>整个算法可以只用内积表达 → 直接支撑核方法</li>
+</ol>
+</blockquote>
+<hr>
+<h2 id="七、本讲的边界与后续" tabindex="-1">七、本讲的边界与后续</h2>
+<p>本讲（2018 秋 Lecture 6）建立在<strong>数据线性可分</strong>的假设上，讲到&quot;最优间隔分类器 + Lagrange 对偶 + 对偶形式 + 只用内积的结构&quot;为止。接下来：</p>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>解决什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kernels（核技巧）</strong></td>
+<td>高维/无穷维特征空间中的隐式计算；合法核的判定（核矩阵对称半正定，Mercer 定理）；高斯核、多项式核、子串核</td>
+</tr>
+<tr>
+<td><strong>软间隔 / $\ell_1$ 正则化</strong></td>
+<td>数据不可分或有离群点：$\min_{w,b}\frac12|w|^2 + C\sum_i\xi_i$，s.t. $y^{(i)}(w^Tx^{(i)}+b)\ge 1-\xi_i$，$\xi_i\ge 0$；对偶中只把 $\alpha_i\ge 0$ 改成 $0\le\alpha_i\le C$</td>
+</tr>
+<tr>
+<td><strong>SMO 算法</strong></td>
+<td>高效求解对偶：等式约束 $\sum_i\alpha_i y^{(i)}=0$ 使单个 $\alpha_i$ 无法单独变动，所以每次<strong>同时更新两个</strong> $\alpha_i,\alpha_j$（坐标上升 + KKT 收敛判据，$tol\approx0.01\sim0.001$）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="易混点速查" tabindex="-1">易混点速查</h2>
+<ul>
+<li><strong>函数间隔 vs 几何间隔</strong>：函数间隔可以靠缩放任意放大，只有几何间隔（真实距离）能当&quot;置信度&quot;</li>
+<li><strong>为什么敢令 $\hat\gamma=1$</strong>：几何间隔对 $(w,b)$ 缩放不变，缩放自由度正好用来固定函数间隔</li>
+<li><strong>不等号方向</strong>：约束写成 $g_i(w)\le 0$ 时 $g_i(w) = -y^{(i)}(w^Tx^{(i)}+b)+1$，别漏负号</li>
+<li><strong>max-min 顺序</strong>：恒有 $d^<em>\le p^</em>$；强对偶需要&quot;凸 + 严格可行&quot;</li>
+<li><strong>支持向量的判定</strong>：在 $\hat\gamma=1$ 的约定下，函数间隔恰为 1 的样本（$g_i(w^*)=0$）才是支持向量</li>
+</ul>
+<hr>
+<h2 id="小结" tabindex="-1">小结</h2>
+<pre class="hljs"><code>起点：逻辑回归里 θᵀx 越大越自信  ──▶  &quot;希望所有样本都远离决策边界&quot;（大间隔）
+        │
+        ├─ 记号：y ∈ {−1,+1}，参数 (w,b)，直接输出 ±1
+        │
+        ├─ 函数间隔 γ̂ = y(wᵀx+b)          —— 缩放可变，不能当置信度
+        ├─ 几何间隔 γ  = y((w/‖w‖)ᵀx + b/‖w‖) —— 缩放不变，是真实距离
+        │
+        ├─ 最优间隔分类器：max γ, ‖w‖=1  →  max γ̂/‖w‖  →  min ½‖w‖², s.t. y(wᵀx+b) ≥ 1（凸 QP）
+        │
+        ├─ Lagrange 对偶：原问题 min-max 得 p*，对偶 max-min 得 d*，恒有 d* ≤ p*
+        │      凸 + 严格可行 ⇒ d* = p*，且满足 KKT 五条
+        │      互补松弛 αᵢgᵢ(w*) = 0 ⇒ αᵢ &gt; 0 只出现在支持向量上
+        │
+        └─ 对偶形式：max Σαᵢ − ½Σ y⁽ⁱ⁾y⁽ʲ⁾αᵢαⱼ⟨x⁽ⁱ⁾,x⁽ʲ⁾⟩  s.t. αᵢ ≥ 0, Σαᵢy⁽ⁱ⁾ = 0
+               w = Σαᵢy⁽ⁱ⁾x⁽ⁱ⁾；预测只需与支持向量做内积 ⇒ 为核方法铺路
+</code></pre>
+<p><strong>本讲关键词</strong>：大间隔、$y\in{-1,+1}$、函数间隔、几何间隔、缩放不变性、最优间隔分类器、QP、Lagrange 对偶、弱/强对偶、KKT 条件、互补松弛、支持向量、对偶形式、只用内积表达。</p>
+<p><strong>下讲预告</strong>：核方法（Kernels）——特征映射 $\phi$、核技巧、Mercer 定理与合法核的判定、高斯核与字符串核；以及软间隔正则化与 SMO 算法。</p>
+<p><strong>备注</strong>：本笔记依据 CS229 官方讲义 <em>Kernel Methods / Support Vector Machines</em>（cs229-notes3）中的 SVM 部分整理，与 Lecture 6 视频范围一致（视频因 YouTube 反爬校验无法抓取字幕）。</p>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="05-gda-naive-bayes.html"><span>Previous</span><strong>GDA 与朴素贝叶斯</strong></a>
+    <a class="next" href="07-kernels.html"><span>Next</span><strong>核方法与 SVM 对偶</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#一、动机：从分对到分得自信">一、动机：从&quot;分对&quot;到&quot;分得自信&quot;</a><a class="toc-level-2" href="#二、记号：为-svm-换一套写法">二、记号：为 SVM 换一套写法</a><a class="toc-level-2" href="#三、函数间隔与几何间隔">三、函数间隔与几何间隔</a><a class="toc-level-3" href="#1-函数间隔（functional-margin）">1. 函数间隔（functional margin）</a><a class="toc-level-3" href="#2-几何间隔（geometric-margin）">2. 几何间隔（geometric margin）</a><a class="toc-level-2" href="#四、最优间隔分类器（optimal-margin-classifier）">四、最优间隔分类器（Optimal Margin Classifier）</a><a class="toc-level-3" href="#1-最直接的写法不好解">1. 最直接的写法不好解</a><a class="toc-level-3" href="#2-换成函数间隔当目标，仍然不好解">2. 换成函数间隔当目标，仍然不好解</a><a class="toc-level-3" href="#3-关键一步：用缩放自由度把-hatgamma-定成-1">3. 关键一步：用缩放自由度把  定成 1</a><a class="toc-level-2" href="#五、lagrange-对偶（通往-svm-对偶形式的桥）">五、Lagrange 对偶（通往 SVM 对偶形式的桥）</a><a class="toc-level-3" href="#1-回顾：只有等式约束（lagrange-乘子法）">1. 回顾：只有等式约束（Lagrange 乘子法）</a><a class="toc-level-3" href="#2-推广：含不等式约束（广义-lagrangian）">2. 推广：含不等式约束（广义 Lagrangian）</a><a class="toc-level-3" href="#3-对偶问题">3. 对偶问题</a><a class="toc-level-3" href="#4-什么时候-dp（强对偶）">4. 什么时候 （强对偶）</a><a class="toc-level-3" href="#5-kkt-条件（五条）">5. KKT 条件（五条）</a><a class="toc-level-2" href="#六、把对偶用在最优间隔分类器上-→-svm">六、把对偶用在最优间隔分类器上 → SVM</a><a class="toc-level-3" href="#1-把约束写成标准形式">1. 把约束写成标准形式</a><a class="toc-level-3" href="#2-先对-wb-求极小">2. 先对  求极小</a><a class="toc-level-3" href="#3-代回，得到对偶问题">3. 代回，得到对偶问题</a><a class="toc-level-3" href="#4-支持向量（support-vectors）">4. 支持向量（Support Vectors）</a><a class="toc-level-3" href="#5-预测：算法只用内积！">5. 预测：算法只用内积！</a><a class="toc-level-2" href="#七、本讲的边界与后续">七、本讲的边界与后续</a><a class="toc-level-2" href="#易混点速查">易混点速查</a><a class="toc-level-2" href="#小结">小结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

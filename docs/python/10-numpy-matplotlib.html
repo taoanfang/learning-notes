@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ndarray、向量化、广播、布尔索引与常用绘图 API。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NumPy 与 Matplotlib · Mingjv Li Notes">
+  <meta property="og:description" content="ndarray、向量化、广播、布尔索引与常用绘图 API。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>NumPy 与 Matplotlib · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-amber">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">Python</a><span>程序设计基础</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-sequences-and-collections.html">
+        <span>01</span>序列与集合
+      </a><a class="" href="02-strings.html">
+        <span>02</span>字符串
+      </a><a class="" href="03-dictionaries.html">
+        <span>03</span>字典
+      </a><a class="" href="04-control-flow.html">
+        <span>04</span>条件、循环与代码组织
+      </a><a class="" href="05-functions.html">
+        <span>05</span>函数
+      </a><a class="" href="06-encapsulation.html">
+        <span>06</span>封装
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-files-and-streams.html">
+        <span>08</span>文件与流
+      </a><a class="" href="09-dunder-properties-iterators.html">
+        <span>09</span>特殊方法、属性与迭代器
+      </a><a class="is-current" href="10-numpy-matplotlib.html">
+        <span>10</span>NumPy 与 Matplotlib
+      </a><a class="" href="11-pandas.html">
+        <span>11</span>Pandas 数据分析
+      </a><a class="" href="12-regex-json-csv.html">
+        <span>12</span>正则表达式、JSON 与 CSV
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">Python</a><span>/</span><span>Data analysis tools</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">Python · Data analysis tools</p>
+          <h1>NumPy 与 Matplotlib</h1>
+          <p class="note-summary">ndarray、向量化、广播、布尔索引与常用绘图 API。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>10 / 12</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="numpy-python-里专门做高速数值计算的库，核心是-ndarray-数组" tabindex="-1">NumPy = Python 里专门做高速数值计算的库，核心是 ndarray 数组</h2>
+<h3 id="全0全1" tabindex="-1">全0/全1</h3>
+<p><code>np.zeros(3) # [0. 0. 0.]</code>
+<code>np.zeros((2,3)) # 2行3列 </code>np.ones((2,2)) # 2行2列全1`</p>
+<h3 id="等差序列" tabindex="-1">等差序列</h3>
+<p><code>np.arange(1,10,2) # 1,3,5,7,9</code></p>
+<h3 id="等分" tabindex="-1">等分</h3>
+<p><code>np.linspace(2,3,5) # [2. , 2.25, 2.5 , 2.75, 3. ]</code></p>
+<h3 id="数组变形-reshape将一维拉成二维" tabindex="-1">数组变形 reshape(将一维拉成二维)</h3>
+<p><code>a = np.arange(12) # 0~11 </code>b = a.reshape(3,4) # 3行4列`</p>
+<h3 id="四个核心属性" tabindex="-1">四个核心属性</h3>
+<p><code>a.ndim # 维度：1 维、2 维… </code>a.shape # 形状：(行数,列数)
+<code>a.size # 总元素个数 </code>a.dtype # 数据类型 int64/float64`</p>
+<h3 id="常用统计函数" tabindex="-1">常用统计函数</h3>
+<p><code>arr = np.array([[1,2,3],[4,5,6]]) </code>np.sum(arr) # 全部求和 21
+<code>np.sum(arr, axis=0) #按列求和 [5,7,9] </code>np.sum(arr, axis=1) # 按行求和 [6,15]
+<code>arr.max() </code>arr.min()
+`arr.mean() # 求平均值</p>
+<h2 id="list-切片：改切片不影响原列表nd-array-切片：改切片会改原数组" tabindex="-1"><mark>list 切片：改切片不影响原列表,nd array 切片：<strong>改切片会改原数组</strong></mark></h2>
+<p><code>arr = np.array([1,2,3,4,5]) </code>sub = arr[1:4]
+<code>sub[0] = 100 </code>print(arr) # [ 1 100 3 4 5]`</p>
+<p><mark>若想安全复制，使用<strong>sub = arr[1:4].copy()</strong></mark></p>
+<h2 id="random随机模块" tabindex="-1">Random随机模块</h2>
+<p><code>np.random.seed(10) # 按照种子随机生成 </code>np.random.rand(5) # 0~1均匀随机
+<code>np.random.randn(3,4) # 正态分布 </code>np.random.randint(1,10,5) # 随机整数`</p>
+<h3 id="常用数学函数" tabindex="-1">常用数学函数</h3>
+<p><code>np.sqrt([4,9,16]) # 开方 </code>np.abs([-1,-2,3]) # 绝对值
+<code>np.square([2,3,4]) # 平方 </code>np.exp([1,2]) # 指数
+<code>e^x np.log([1,10]) # 自然对数</code></p>
+<h2 id="向量化-vs-广播（numpy-灵魂）" tabindex="-1"><mark>向量化 vs 广播（NumPy 灵魂）</mark></h2>
+<h2 id="一、numpy-数值计算库" tabindex="-1">一、NumPy 数值计算库</h2>
+<h3 id="1-numpy-基础概述" tabindex="-1">1. NumPy 基础概述</h3>
+<ol>
+<li>全称：Numerical Python，Python 科学计算底层核心库，所有数据分析、AI 运算依赖它。</li>
+<li>核心对象：<code>ndarray</code> 多维同类型数组。</li>
+<li>ndarray vs Python list 核心区别</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Python list</th>
+<th>ndarray</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可存储不同数据类型</td>
+<td>全部元素类型统一</td>
+</tr>
+<tr>
+<td>内存分散存储，运算速度慢</td>
+<td>连续内存，底层批量运算，速度极快</td>
+</tr>
+<tr>
+<td>不支持整体批量运算，需循环</td>
+<td>原生支持数组整体运算（向量化）</td>
+</tr>
+<tr>
+<td>结论：ndarray 更适合大数据、科学计算、AI 模型运算。</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-ndarray-4-种创建方式" tabindex="-1">2. ndarray 4 种创建方式</h3>
+<p>python</p>
+<p>运行</p>
+<pre class="hljs"><code>import numpy as np
+# 1. 列表转数组
+arr = np.array([1,2,3])
+# 2. 全0数组，参数为形状(行,列)
+np.zeros((2,3))
+# 3. 全1数组
+np.ones((2,2))
+# 4. 等差数组
+np.arange(start, stop, step)  # 整数等差，左闭右开
+np.linspace(起始,终止,num=份数) # 浮点均匀分割，高精度绘图常用
+</code></pre>
+<ol start="4">
+<li>数组变形：<code>reshape(行,列)</code>，元素总数必须匹配</li>
+</ol>
+<pre class="hljs"><code>a = np.arange(12)
+b = a.reshape(3,4) # 转为3行4列二维数组
+</code></pre>
+<h3 id="3-ndarray-四大常用属性" tabindex="-1">3. ndarray 四大常用属性</h3>
+<ol>
+<li><code>arr.ndim</code>：数组维度（一维 / 二维）</li>
+<li><code>arr.shape</code>：数组形状，一维<code>(n,)</code>，二维<code>(行数,列数)</code></li>
+<li><code>arr.size</code>：数组全部元素总个数</li>
+<li><code>arr.dtype</code>：数组元素数据类型（int64/float64）</li>
+</ol>
+<h3 id="4-数组运算" tabindex="-1">4. 数组运算</h3>
+<ol>
+<li>对位运算：两个数组相同位置元素直接加减乘除，无需循环</li>
+</ol>
+<pre class="hljs"><code>a = np.array([1,2,3])
+b = np.array([4,5,6])
+print(a + b) # [5 7 9]
+</code></pre>
+<ol start="2">
+<li>全局统计函数，支持<code>axis</code>控制运算维度</li>
+</ol>
+<ul>
+<li><code>np.sum(arr)</code>：全部元素求和</li>
+<li><code>np.sum(arr, axis=0)</code>：按<strong>列</strong>求和</li>
+<li><code>np.sum(arr, axis=1)</code>：按<strong>行</strong>求和</li>
+<li><code>arr.max()/arr.min()/arr.mean()</code>：最大值、最小值、平均值</li>
+</ul>
+<h3 id="5-数组索引与切片（高频考点）" tabindex="-1">5. 数组索引与切片（高频考点）</h3>
+<ol>
+<li>基础取值：<code>b[行下标,列下标]</code></li>
+<li>切片语法</li>
+</ol>
+<pre class="hljs"><code>b[0,:]   # 取第0行全部列
+b[:,1]   # 取全部行，第1列
+b[1:3,:] # 取1、2两行，所有列（左闭右开）
+</code></pre>
+<ol start="3">
+<li>切片关键特性：视图（view）</li>
+</ol>
+<ul>
+<li>NumPy 切片默认不复制数据，修改切片会直接改变原数组；</li>
+<li>Python 列表切片是拷贝，修改子切片不影响原列表；</li>
+<li>如需独立数据，使用<code>.copy()</code>深拷贝：<code>sub = arr[1:4].copy()</code></li>
+</ul>
+<h3 id="6-nprandom-随机数组模块（批量生成随机数）" tabindex="-1">6. np.random 随机数组模块（批量生成随机数）</h3>
+<ol>
+<li><code>np.random.rand(shape)</code>：0~1 均匀分布浮点数</li>
+<li><code>np.random.randn(shape)</code>：标准正态分布（均值 0，方差 1），绘图实验常用</li>
+<li><code>np.random.randint(low, high, num)</code>：生成指定区间随机整数（左闭右开）</li>
+<li><code>np.random.seed(数字)</code>：固定随机种子，每次运行随机结果完全一致</li>
+<li>对比原生<code>random</code>库：原生只能单次生成 1 个数字，需要循环；numpy 可批量生成多维随机数组，效率更高。</li>
+</ol>
+<h3 id="7-全局数学函数（向量化运算，无需循环）" tabindex="-1">7. 全局数学函数（向量化运算，无需循环）</h3>
+<p>对数组全部元素统一计算：</p>
+<ul>
+<li><code>np.sqrt()</code> 开平方</li>
+<li><code>np.abs()</code> 绝对值</li>
+<li><code>np.square()</code> 平方</li>
+<li><code>np.exp()</code> 自然指数</li>
+<li><code>np.log()</code> 自然对数</li>
+</ul>
+<h3 id="8-两大核心思想：向量化-广播" tabindex="-1">8. 两大核心思想：向量化 + 广播</h3>
+<ol>
+<li>
+<p><strong>向量化 Vectorization</strong></p>
+<p>不写 for 循环，直接对整个数组批量运算；优势：代码简洁、运算速度快、适配海量 AI 数据。</p>
+<p>示例：<code>arr * 2</code> 全体元素统一乘 2，无循环。</p>
+</li>
+<li>
+<p><strong>广播 Broadcasting</strong></p>
+<p>两个形状不同的数组运算时，NumPy 自动扩展维度至匹配形状再计算；最常见：数组 + 标量（数字自动扩展成全同值数组）。</p>
+</li>
+<li>
+<p>区分：向量化是整体运算思想；广播是形状自动适配的配套机制。</p>
+</li>
+</ol>
+<h3 id="9-布尔索引（数据筛选核心）" tabindex="-1">9. 布尔索引（数据筛选核心）</h3>
+<p>利用布尔数组过滤符合条件的数据，数据分析、AI 置信度筛选高频用法</p>
+<pre class="hljs"><code>arr = np.array([1,2,3,4,5])
+print(arr &gt; 3) # 输出布尔数组 [False False False True True]
+print(arr[arr&gt;3]) # 筛选大于3的元素 [4,5]
+</code></pre>
+<h3 id="10-课堂练习-1-考点" tabindex="-1">10. 课堂练习 1 考点</h3>
+<p>需求：创建数组、查看 shape、向量化整体运算、布尔索引筛选；</p>
+<p>思考题：NumPy 不推荐 for 循环，因为循环速度远低于底层向量化批量运算。</p>
+<h2 id="二、matplotlib-数据可视化绘图库" tabindex="-1">二、Matplotlib 数据可视化绘图库</h2>
+<h3 id="1-matplotlib-基础介绍" tabindex="-1">1. Matplotlib 基础介绍</h3>
+<ol>
+<li>模仿 MATLAB 绘图接口，生成出版级图表；支持导出 PNG/PDF/SVG/JPG 等格式。</li>
+<li>作用：可视化数据，快速发现异常、趋势、规律，是数据分析收尾步骤。</li>
+</ol>
+<h3 id="2-环境安装与-ipython-交互" tabindex="-1">2. 环境安装与 IPython 交互</h3>
+<ol>
+<li>安装命令：<code>pip3 install matplotlib ipython</code></li>
+<li>IPython 交互：输入<code>%matplotlib</code>魔法命令，自动配置图形后端，绘图窗口正常显示。</li>
+</ol>
+<h3 id="3-绘图层级架构（必背）" tabindex="-1">3. 绘图层级架构（必背）</h3>
+<p><code>Figure</code>（画布，最外层）→ <code>Axes</code>（子图 / 坐标系，所有图形画在 Axes 上）→ 坐标轴、折线、柱状图、图例、文字等元素。</p>
+<h3 id="4-两种绘图模式" tabindex="-1">4. 两种绘图模式</h3>
+<ol>
+<li>
+<p><strong>隐式模式（简易绘图）</strong></p>
+<p>直接<code>plt.plot()</code>，系统自动创建默认画布 + 单张子图，代码简短，适合简单图表。</p>
+</li>
+<li>
+<p><strong>显式模式（考试推荐，复杂绘图）</strong></p>
+<p>手动创建画布与子图，可控性强：<code>fig, ax = plt.subplots()</code></p>
+</li>
+</ol>
+<h3 id="5-画布与子图创建语法" tabindex="-1">5. 画布与子图创建语法</h3>
+<ol>
+<li>单画布单张子图</li>
+</ol>
+<pre class="hljs"><code>fig = plt.figure(figsize=(8,5)) # figsize设置画布宽高英寸
+ax = fig.add_subplot(111) # 1行1列第1个子图
+</code></pre>
+<ol start="2">
+<li>批量创建多子图（最常用）</li>
+</ol>
+<pre class="hljs"><code>fig, axes = plt.subplots(nrows=2, ncols=3) # 2行3列共6个子图
+axes[i,j] # 索引第i行第j列子图
+</code></pre>
+<ol start="3">
+<li>subplots 常用参数</li>
+</ol>
+<ul>
+<li><code>sharex/sharey=True</code>：所有子图共享坐标轴刻度</li>
+<li><code>figsize</code>：统一设置画布大小</li>
+</ul>
+<ol start="4">
+<li>调整子图间距：<code>plt.subplots_adjust(wspace=0, hspace=0)</code>，w 横向间距、h 纵向间距</li>
+</ol>
+<h3 id="6-五类基础绘图函数（ax-对象调用）" tabindex="-1">6. 五类基础绘图函数（ax 对象调用）</h3>
+<ol>
+<li><code>ax.plot()</code>：折线图，展示连续数据趋势</li>
+<li><code>ax.bar()</code>：柱状图，对比分类数值</li>
+<li><code>ax.scatter()</code>：散点图，展示两组数据相关性</li>
+<li><code>ax.hist()</code>：直方图，统计数值分布，bins = 柱子数量，alpha = 透明度</li>
+<li><code>ax.pie()</code>：饼图，展示占比，不可叠加绘制</li>
+</ol>
+<h3 id="7-线条、标记、颜色样式" tabindex="-1">7. 线条、标记、颜色样式</h3>
+<ol>
+<li>简写格式字符串：<code>'ko--'</code> 黑色、圆形标记、虚线</li>
+<li>完整参数写法：<code>color='k', linestyle='dashed', marker='o'</code></li>
+<li>常用缩写对照表</li>
+</ol>
+<ul>
+<li>颜色：b 蓝、g 绿、r 红、k 黑、w 白</li>
+<li>线型：<code>-</code>实线、<code>--</code>虚线、<code>-.</code>点划线、<code>:</code>点线</li>
+<li>标记：o 圆圈、^ 上三角、s 正方形、* 星号、. 小点</li>
+</ul>
+<h3 id="8-中文乱码解决（必考）" tabindex="-1">8. 中文乱码解决（必考）</h3>
+<pre class="hljs"><code>import matplotlib
+# 设置黑体，支持中文
+matplotlib.rcParams['font.family'] = 'SimHei'
+# 负号正常显示，不变成方框
+matplotlib.rcParams['axes.unicode_minus'] = False
+</code></pre>
+<h3 id="9-坐标轴、标题、刻度、图例设置" tabindex="-1">9. 坐标轴、标题、刻度、图例设置</h3>
+<ol>
+<li>
+<p>标题与轴名</p>
+<p><code>ax.set_title(&quot;图表标题&quot;)</code></p>
+<p><code>ax.set_xlabel(&quot;横轴名称&quot;)</code> / <code>ax.set_ylabel(&quot;纵轴名称&quot;)</code></p>
+</li>
+<li>
+<p>自定义刻度</p>
+<p><code>ax.set_xticks([0,250,500])</code> 设置刻度位置</p>
+<p><code>ax.set_xticklabels(['一','二','三'], rotation=30)</code> 设置刻度文字、旋转角度</p>
+</li>
+<li>
+<p>图例 legend</p>
+<p>绘图时传入<code>label=&quot;系列名称&quot;</code>，最后调用<code>ax.legend(loc='best')</code>自动最优位置展示图例</p>
+</li>
+</ol>
+<h3 id="10-图片保存-savefig" tabindex="-1">10. 图片保存 savefig</h3>
+<pre class="hljs"><code>plt.savefig(&quot;test.png&quot;, dpi=400, bbox_inches='tight')
+</code></pre>
+<p>参数说明：</p>
+<ul>
+<li>fname：文件路径，后缀自动识别 png/pdf/svg；</li>
+<li>dpi：图像分辨率；</li>
+<li>bbox_inches=‘tight’：裁剪图表四周空白边距。</li>
+</ul>
+<h3 id="11-matplotlib-全局配置-rc" tabindex="-1">11. Matplotlib 全局配置 rc</h3>
+<p>统一修改全局样式（字体、画布大小、图例）</p>
+<pre class="hljs"><code># 全局设置画布尺寸
+plt.rc('figure', figsize=(10,10))
+# 批量设置字体
+font_cfg = {'family':'monospace','weight':'bold','size':14}
+plt.rc('font',**font_cfg)
+</code></pre>
+<h2 id="三、本章整体总结" tabindex="-1">三、本章整体总结</h2>
+<ol>
+<li>NumPy 提供高性能多维数组 ndarray，依靠<strong>向量化 + 广播</strong>实现无循环高速数值运算，是 Pandas、AI 模型底层依赖；核心操作包含数组创建、变形、切片、统计、布尔筛选、随机数生成。</li>
+<li>Matplotlib 是数据分析可视化工具，依托画布 Figure、子图 Axes 架构绘制各类图表，支持自定义线条、文字、图例，可导出高清图片，用于直观展示数据规律。</li>
+<li>完整数据分析链路：NumPy 批量数值计算 → Pandas 结构化表格处理 → Matplotlib 可视化出图，三者构成 Python 数据分析完整技术栈。</li>
+</ol>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="09-dunder-properties-iterators.html"><span>Previous</span><strong>特殊方法、属性与迭代器</strong></a>
+    <a class="next" href="11-pandas.html"><span>Next</span><strong>Pandas 数据分析</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#numpy-python-里专门做高速数值计算的库，核心是-ndarray-数组">NumPy Python 里专门做高速数值计算的库，核心是 ndarray 数组</a><a class="toc-level-3" href="#全0全1">全0/全1</a><a class="toc-level-3" href="#等差序列">等差序列</a><a class="toc-level-3" href="#等分">等分</a><a class="toc-level-3" href="#数组变形-reshape将一维拉成二维">数组变形 reshape(将一维拉成二维)</a><a class="toc-level-3" href="#四个核心属性">四个核心属性</a><a class="toc-level-3" href="#常用统计函数">常用统计函数</a><a class="toc-level-2" href="#list-切片：改切片不影响原列表nd-array-切片：改切片会改原数组">list 切片：改切片不影响原列表,nd array 切片： 改切片会改原数组</a><a class="toc-level-2" href="#random随机模块">Random随机模块</a><a class="toc-level-3" href="#常用数学函数">常用数学函数</a><a class="toc-level-2" href="#向量化-vs-广播（numpy-灵魂）">向量化 vs 广播（NumPy 灵魂）</a><a class="toc-level-2" href="#一、numpy-数值计算库">一、NumPy 数值计算库</a><a class="toc-level-3" href="#1-numpy-基础概述">1. NumPy 基础概述</a><a class="toc-level-3" href="#2-ndarray-4-种创建方式">2. ndarray 4 种创建方式</a><a class="toc-level-3" href="#3-ndarray-四大常用属性">3. ndarray 四大常用属性</a><a class="toc-level-3" href="#4-数组运算">4. 数组运算</a><a class="toc-level-3" href="#5-数组索引与切片（高频考点）">5. 数组索引与切片（高频考点）</a><a class="toc-level-3" href="#6-nprandom-随机数组模块（批量生成随机数）">6. np.random 随机数组模块（批量生成随机数）</a><a class="toc-level-3" href="#7-全局数学函数（向量化运算，无需循环）">7. 全局数学函数（向量化运算，无需循环）</a><a class="toc-level-3" href="#8-两大核心思想：向量化-广播">8. 两大核心思想：向量化 + 广播</a><a class="toc-level-3" href="#9-布尔索引（数据筛选核心）">9. 布尔索引（数据筛选核心）</a><a class="toc-level-3" href="#10-课堂练习-1-考点">10. 课堂练习 1 考点</a><a class="toc-level-2" href="#二、matplotlib-数据可视化绘图库">二、Matplotlib 数据可视化绘图库</a><a class="toc-level-3" href="#1-matplotlib-基础介绍">1. Matplotlib 基础介绍</a><a class="toc-level-3" href="#2-环境安装与-ipython-交互">2. 环境安装与 IPython 交互</a><a class="toc-level-3" href="#3-绘图层级架构（必背）">3. 绘图层级架构（必背）</a><a class="toc-level-3" href="#4-两种绘图模式">4. 两种绘图模式</a><a class="toc-level-3" href="#5-画布与子图创建语法">5. 画布与子图创建语法</a><a class="toc-level-3" href="#6-五类基础绘图函数（ax-对象调用）">6. 五类基础绘图函数（ax 对象调用）</a><a class="toc-level-3" href="#7-线条、标记、颜色样式">7. 线条、标记、颜色样式</a><a class="toc-level-3" href="#8-中文乱码解决（必考）">8. 中文乱码解决（必考）</a><a class="toc-level-3" href="#9-坐标轴、标题、刻度、图例设置">9. 坐标轴、标题、刻度、图例设置</a><a class="toc-level-3" href="#10-图片保存-savefig">10. 图片保存 savefig</a><a class="toc-level-3" href="#11-matplotlib-全局配置-rc">11. Matplotlib 全局配置 rc</a><a class="toc-level-2" href="#三、本章整体总结">三、本章整体总结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

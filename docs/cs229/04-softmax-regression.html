@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从 GLM 推导多分类模型，讨论损失、梯度和数值实现。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Softmax 回归 · Mingjv Li Notes">
+  <meta property="og:description" content="从 GLM 推导多分类模型，讨论损失、梯度和数值实现。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>Softmax 回归 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-blue" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-blue">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS229</a><span>Machine Learning</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-linear-regression.html">
+        <span>01</span>线性回归与梯度下降
+      </a><a class="" href="02-weighted-logistic-regression.html">
+        <span>02</span>局部加权与逻辑回归
+      </a><a class="" href="03-perceptron-glm.html">
+        <span>03</span>感知机与广义线性模型
+      </a><a class="is-current" href="04-softmax-regression.html">
+        <span>04</span>Softmax 回归
+      </a><a class="" href="05-gda-naive-bayes.html">
+        <span>05</span>GDA 与朴素贝叶斯
+      </a><a class="" href="06-support-vector-machines.html">
+        <span>06</span>支持向量机
+      </a><a class="" href="07-kernels.html">
+        <span>07</span>核方法与 SVM 对偶
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS229</a><span>/</span><span>Supervised learning foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS229 · Supervised learning foundations</p>
+          <h1>Softmax 回归</h1>
+          <p class="note-summary">从 GLM 推导多分类模型，讨论损失、梯度和数值实现。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>4 / 7</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><blockquote>
+<p><strong>课程</strong>：Stanford CS229 (Autumn 2018) · Andrew Ng
+<strong>对应内容</strong>：Lecture 4（Perceptron &amp; GLM）· 官方讲义 <em>notes1</em> §9.3 Softmax Regression
+<strong>定位</strong>：<code>Les3.md</code> 里的 Softmax 是概览版，这份笔记把 GLM 推导、损失、梯度、数值实现细节展开
+<strong>视频</strong>：<a href="https://www.youtube.com/watch?v=iZTeva0WSTQ">Lecture 4 - Perceptron &amp; Generalized Linear Model</a></p>
+</blockquote>
+<hr>
+<h2 id="一、问题设定" tabindex="-1">一、问题设定</h2>
+<ul>
+<li>从二分类走到<strong>多分类</strong>：$y \in {1,2,\dots,k}$</li>
+<li>例：邮件不再只分&quot;垃圾/非垃圾&quot;，而是分 spam / 私人邮件 / 工作邮件</li>
+<li>目标：直接建模每一类的概率 $p(y=i\mid x;\theta)$，输出一个**$k$ 类的概率分布**</li>
+<li>标签可以用 <strong>one-hot</strong> 表示（$y=2$ → $(0,1,0,\dots,0)^T$）</li>
+</ul>
+<hr>
+<h2 id="二、从-glm-推出-softmax（“为什么是-softmax”）" tabindex="-1">二、从 GLM 推出 softmax（“为什么是 softmax”）</h2>
+<h3 id="0-回顾-glm-的三个假设" tabindex="-1">0. 回顾 GLM 的三个假设</h3>
+<ol>
+<li>$y\mid x;\theta \sim \mathrm{ExponentialFamily}(\eta)$</li>
+<li>预测目标是期望：$h_\theta(x) = E[T(y)\mid x;\theta]$</li>
+<li>自然参数与输入线性相关：$\eta_i = \theta_i^T x$</li>
+</ol>
+<h3 id="1-先把-multinomial-写成指数族" tabindex="-1">1. 先把 Multinomial 写成指数族</h3>
+<p>$k$ 种结果的概率用 $\phi_1,\dots,\phi_k$ 描述，但<strong>存在冗余</strong>：只要知道任意 $k-1$ 个，最后一个就由 $\sum_i\phi_i = 1$ 确定。</p>
+<p>所以只保留 $k-1$ 个参数：$\phi_i = p(y=i;\phi)$（$i=1…k-1$），并记 $\phi_k = 1-\sum_{i=1}^{k-1}\phi_i$（注意 $\phi_k$ 不是独立参数）。</p>
+<p>定义<strong>充分统计量</strong> $T(y) \in \mathbb{R}^{k-1}$：</p>
+<p>$$
+(T(y))_i = \mathbb{1}{y = i}
+$$</p>
+<p>即</p>
+<p>$$
+T(1)=\begin{bmatrix}1\0\\vdots\0\end{bmatrix},\quad
+T(2)=\begin{bmatrix}0\1\\vdots\0\end{bmatrix},\quad\cdots,\quad
+T(k-1)=\begin{bmatrix}0\0\\vdots\1\end{bmatrix},\quad
+T(k)=\begin{bmatrix}0\0\\vdots\0\end{bmatrix}
+$$</p>
+<blockquote>
+<p>⚠️ 两个容易忽略的点：这里 <strong>$T(y)\ne y$</strong>，而且 $T(y)$ 是 <strong>$k-1$ 维向量</strong>而不是标量。另外 $E[(T(y))_i] = P(y=i) = \phi_i$。</p>
+</blockquote>
+<p>化简可得多项分布属于指数族：</p>
+<p>$$
+p(y;\phi) = \phi_1^{\mathbb{1}{y=1}}\phi_2^{\mathbb{1}{y=2}}\cdots\phi_k^{\mathbb{1}{y=k}}
+= b(y)\exp\left(\eta^T T(y) - a(\eta)\right)
+$$</p>
+<p>其中</p>
+<p>$$
+\eta = \begin{bmatrix}\log(\phi_1/\phi_k)\ \log(\phi_2/\phi_k)\ \vdots \ \log(\phi_{k-1}/\phi_k)\end{bmatrix},
+\qquad a(\eta) = -\log\phi_k,\qquad b(y) = 1
+$$</p>
+<h3 id="2-自然参数（link-function）" tabindex="-1">2. 自然参数（link function）</h3>
+<p>由上式直接读出（对 $i=1,\dots,k$）：</p>
+<p>$$
+\eta_i = \log\frac{\phi_i}{\phi_k},
+\qquad\text{且}\qquad \eta_k = \log\frac{\phi_k}{\phi_k} = 0
+$$</p>
+<p>这就是二分类 logit（对数几率）在多分类下的推广：<strong>“与第 $k$ 类相比的对数几率”</strong>。</p>
+<h3 id="3-反解-→-softmax-函数（canonical-response-function）" tabindex="-1">3. 反解 → softmax 函数（canonical response function）</h3>
+<p>由 $e^{\eta_i} = \phi_i/\phi_k$，两边对 $i$ 求和：</p>
+<p>$$
+\sum_{i=1}^{k} e^{\eta_i} = \frac{1}{\phi_k}\sum_{i=1}^{k}\phi_i = \frac{1}{\phi_k}
+\qquad\Longrightarrow\qquad
+\phi_k = \frac{1}{\sum_{j=1}^{k}e^{\eta_j}}
+$$</p>
+<p>代回 $e^{\eta_i} = \phi_i/\phi_k$ 即得响应函数：</p>
+<p>$$
+\phi_i = \frac{e^{\eta_i}}{\sum_{j=1}^{k}e^{\eta_j}}
+$$</p>
+<p>把&quot;自然参数 $\eta$ → 分布均值 $\phi$&quot;的这个映射命名为 <strong>softmax 函数</strong>。</p>
+<h3 id="4-代回-eta_i-theta_itx，得到模型" tabindex="-1">4. 代回 $\eta_i = \theta_i^Tx$，得到模型</h3>
+<p>$$
+\boxed{;p(y=i\mid x;\theta) = \frac{e^{\theta_i^Tx}}{\sum_{j=1}^{k}e^{\theta_j^Tx}};}
+$$</p>
+<p>这就是 Lecture 4 里那个式子。<strong>softmax 不是拍脑袋设计的</strong>——它是&quot;假设 $y\mid x$ 服从多项分布 + GLM 三假设&quot;之后的必然结果，正如 sigmoid 之于 Bernoulli。</p>
+<p>模型输出：</p>
+<p>$$
+h_\theta(x) = E[T(y)\mid x;\theta] = (\phi_1,\phi_2,\dots,\phi_{k-1})^T
+$$</p>
+<p>第 $k$ 类概率由 $1-\sum_{i=1}^{k-1}\phi_i$ 得到。</p>
+<hr>
+<h2 id="三、softmax-函数的性质" tabindex="-1">三、Softmax 函数的性质</h2>
+<table>
+<thead>
+<tr>
+<th>性质</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输出是<strong>概率分布</strong></td>
+<td>每一项 $&gt;0$，且 $\sum_i \phi_i = 1$</td>
+</tr>
+<tr>
+<td><strong>保序</strong></td>
+<td>logit（打分）最大的类别，概率也最大</td>
+</tr>
+<tr>
+<td><strong>平移不变</strong></td>
+<td>$\eta \to \eta + c\cdot\mathbf{1}$ 时输出完全不变 → 参数有冗余</td>
+</tr>
+<tr>
+<td>对差值敏感</td>
+<td>logit 差距拉大时概率趋向 one-hot（表现为&quot;过度自信&quot;）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-参数冗余（over-parameterization）" tabindex="-1">1. 参数冗余（over-parameterization）</h3>
+<p>若使用 $k$ 组参数 $\theta_1,\dots,\theta_k$，则把<strong>所有</strong> $\theta_i$ 同时加上任意向量 $\psi$，模型输出不变：</p>
+<p>$$
+\frac{e^{(\theta_i+\psi)^Tx}}{\sum_j e^{(\theta_j+\psi)^Tx}} = \frac{e^{\psi^Tx}e^{\theta_i^Tx}}{e^{\psi^Tx}\sum_j e^{\theta_j^Tx}} = \frac{e^{\theta_i^Tx}}{\sum_j e^{\theta_j^Tx}}
+$$</p>
+<p>两种处理方式：</p>
+<ul>
+<li><strong>CS229 讲义的做法</strong>：只保留 $k-1$ 组参数，固定 $\theta_k = 0$（参数量 $(k-1)\times(n+1)$）</li>
+<li><strong>实践的常用做法</strong>：保留全部 $k$ 组，加上 <strong>L2 正则项（weight decay）</strong>，让最优解唯一</li>
+</ul>
+<h3 id="2-特例：k2-退化成逻辑回归" tabindex="-1">2. 特例：$k=2$ 退化成逻辑回归</h3>
+<p>$$
+\phi_1 = \frac{e^{\theta_1^Tx}}{e^{\theta_1^Tx}+e^{\theta_2^Tx}}
+= \frac{1}{1+e^{(\theta_2-\theta_1)^Tx}}
+\quad\overset{\theta_2 = 0}{=}\quad
+\frac{1}{1+e^{-\theta_1^Tx}} = \mathrm{sigmoid}(\theta_1^Tx)
+$$</p>
+<blockquote>
+<p>🔑 这也顺便解释了&quot;为什么二分类只要有 $k-1=1$ 组参数&quot;：两个类的参数差才是有效信息。</p>
+</blockquote>
+<hr>
+<h2 id="四、损失函数与极大似然" tabindex="-1">四、损失函数与极大似然</h2>
+<p>对数似然：</p>
+<p>$$
+\ell(\theta) = \sum_{i=1}^{n}\log p(y^{(i)}\mid x^{(i)};\theta)
+= \sum_{i=1}^{n}\sum_{l=1}^{k}\mathbb{1}{y^{(i)}=l}\log\frac{e^{\theta_l^Tx^{(i)}}}{\sum_{j=1}^{k}e^{\theta_j^Tx^{(i)}}}
+$$</p>
+<p>因为 $\sum_l \mathbb{1}{y=l}\log p_l = \log p_{y}$，所以<strong>每个样本只惩罚&quot;真实类别的预测概率&quot;</strong>：真实类的概率越接近 1，损失越小。</p>
+<p>即就是<strong>交叉熵</strong>（单样本，$t$ 为真实类别）：</p>
+<p>$$
+\mathrm{Loss} = -\log\frac{e^{\theta_t^Tx}}{\sum_{j=1}^{k}e^{\theta_j^Tx}} = -\eta_t + \log\sum_{j=1}^{k}e^{\eta_j}
+$$</p>
+<p>训练：用<strong>梯度上升</strong>最大化 $\ell(\theta)$，或梯度下降最小化交叉熵（注意 $\ell$ 是凹函数 → 只有全局最优）。</p>
+<hr>
+<h2 id="五、梯度（形式非常漂亮）" tabindex="-1">五、梯度（形式非常漂亮）</h2>
+<p>$$
+\nabla_{\theta_c}\ell(\theta) = \sum_{i=1}^{n}\left[\mathbb{1}{y^{(i)}=c} - p(y=c\mid x^{(i)};\theta)\right]x^{(i)}
+$$</p>
+<p>（用 $\theta_k=0$ 的约定时，$c$ 取 $1,\dots,k-1$；若保留 $k$ 组参数，则对 $c=1…k$ 都成立。）</p>
+<p>梯度下降/上升更新：</p>
+<p>$$
+\theta_c := \theta_c + \alpha\sum_{i=1}^{n}\left(\mathbb{1}{y^{(i)}=c} - p_c^{(i)}\right)x^{(i)}
+$$</p>
+<blockquote>
+<p>🔑 “<strong>真实标签 − 预测概率</strong>再乘输入”，和线性回归、逻辑回归的更新式是同一个模子——这正是 GLM 家族统一性的又一次体现。差别只在 $h_\theta$ 的定义。</p>
+</blockquote>
+<hr>
+<h2 id="六、实现要点（工程上最容易踩的坑）" tabindex="-1">六、实现要点（工程上最容易踩的坑）</h2>
+<ol>
+<li><strong>log-sum-exp 技巧</strong>：直接算 $e^{\eta}$ 会溢出，先减去最大值：</li>
+</ol>
+<p>$$
+\log p(y=t\mid x) = \eta_t - \log\sum_j e^{\eta_j},
+\qquad \eta_j \leftarrow \eta_j - \max_j\eta_j \ \text{后再指数化}
+$$</p>
+<ol start="2">
+<li><strong>别&quot;先 softmax 再取 log&quot;</strong>：应当使用 <code>log_softmax</code> + NLL。PyTorch 的 <code>CrossEntropyLoss</code> 就是 <code>log_softmax</code> + <code>nll_loss</code> 的组合，直接吃<strong>整数标签</strong>，不需要手工 one-hot。</li>
+<li><strong>参数量</strong>：含冗余时 $k\times(n+1)$，去冗余后 $(k-1)\times(n+1)$；$k$ 很大（如语言模型词表）时，归一化项 $\sum_j e^{\eta_j}$ 是主要计算瓶颈 → 负采样、层次 softmax 等技巧。</li>
+<li><strong>正则化</strong>：weight decay 既能消除参数冗余带来的不唯一性，也能抑制&quot;过度自信&quot;的概率输出。</li>
+<li><strong>输出解释</strong>：概率和恒为 1，不要再做归一化；做多标签（一篇邮件可同时是 spam 和 work）时应当每类独立用 sigmoid，而不是 softmax。</li>
+</ol>
+<hr>
+<h2 id="七、容易混淆的对照" tabindex="-1">七、容易混淆的对照</h2>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>与 softmax 的关系</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sigmoid</td>
+<td>$k=2$ 时 softmax 的特例</td>
+</tr>
+<tr>
+<td>交叉熵 / NLL</td>
+<td>softmax 的标准损失，等价于多样本极大似然</td>
+</tr>
+<tr>
+<td>KL 散度</td>
+<td>交叉熵 $= H(p_{\text{data}}) + \mathrm{KL}(p_{\text{data}},|,p_{\text{model}})$，最小化交叉熵 ⇔ 最小化 KL</td>
+</tr>
+<tr>
+<td>Logistic 回归 / GLM</td>
+<td>同一框架下的二分类版本；softmax 是 GLM 家族的成员</td>
+</tr>
+<tr>
+<td>神经网络</td>
+<td>多分类输出层的标准结构：线性层 + softmax + 交叉熵</td>
+</tr>
+</tbody>
+</table>
+<p><strong>易混点速查</strong></p>
+<ul>
+<li>softmax 的输入是 <strong>logits（任意实数）</strong>，输出才是概率；别把它当成&quot;输出后再配平方误差&quot;的激活函数</li>
+<li>$T(y)\ne y$：多分类的充分统计量是 $k-1$ 维 one-hot，不是标量（只有 Gaussian/Bernoulli 才恰好 $T(y)=y$）</li>
+<li>$\theta_k=0$ 与 “加 L2 正则” 是殊途同归的去冗余手段；用前者时梯度公式的 $c$ 只取到 $k-1$</li>
+<li>二分类 k=2 用 softmax 与直接用一个 sigmoid 等价，但参数量差一倍</li>
+</ul>
+<hr>
+<h2 id="小结" tabindex="-1">小结</h2>
+<pre class="hljs"><code>多分类 y ∈ {1..k}  ──▶  假设 y|x 服从 Multinomial（指数族成员）
+        │
+        ├─ 充分统计量 T(y) ∈ Rᵏ⁻¹：（T(y)）ᵢ = 1{y=i}
+        ├─ canonical link：ηᵢ = log(φᵢ/φ_k)，且 η_k = 0
+        │
+        ├─ 反解得 canonical response function = softmax
+        │        φᵢ = e^{ηᵢ} / Σⱼ e^{ηⱼ}
+        │
+        ├─ 代入 ηᵢ = θᵢᵀx  ⇒  p(y=i|x) = e^{θᵢᵀx} / Σⱼ e^{θⱼᵀx}
+        │
+        ├─ 极大似然 = 最小化交叉熵（只惩罚真实类的预测概率）
+        └─ 梯度：∇θ_c ℓ = Σᵢ (1{y⁽ⁱ⁾=c} − p_c⁽ⁱ⁾) x⁽ⁱ⁾
+                 ↳ 与线性回归/逻辑回归同构 → GLM 的统一更新式
+        k=2 时退化为 sigmoid ⇒ 逻辑回归
+</code></pre>
+<p><strong>关键词</strong>：Multinomial、充分统计量 $T(y)$、natural parameter、canonical link / response function、softmax、one-hot、交叉熵、log-sum-exp、参数冗余、weight decay。</p>
+<p><strong>备注</strong>：推导依据 CS229 官方讲义 <em>notes1</em> §9.3（Multinomial 的指数族形式 → link/response → 参数拟合），与 Lecture 4 视频内容一致。</p>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="03-perceptron-glm.html"><span>Previous</span><strong>感知机与广义线性模型</strong></a>
+    <a class="next" href="05-gda-naive-bayes.html"><span>Next</span><strong>GDA 与朴素贝叶斯</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#一、问题设定">一、问题设定</a><a class="toc-level-2" href="#二、从-glm-推出-softmax（“为什么是-softmax”）">二、从 GLM 推出 softmax（&quot;为什么是 softmax&quot;）</a><a class="toc-level-3" href="#0-回顾-glm-的三个假设">0. 回顾 GLM 的三个假设</a><a class="toc-level-3" href="#1-先把-multinomial-写成指数族">1. 先把 Multinomial 写成指数族</a><a class="toc-level-3" href="#2-自然参数（link-function）">2. 自然参数（link function）</a><a class="toc-level-3" href="#3-反解-→-softmax-函数（canonical-response-function）">3. 反解 → softmax 函数（canonical response function）</a><a class="toc-level-3" href="#4-代回-eta_i-theta_itx，得到模型">4. 代回 ，得到模型</a><a class="toc-level-2" href="#三、softmax-函数的性质">三、Softmax 函数的性质</a><a class="toc-level-3" href="#1-参数冗余（over-parameterization）">1. 参数冗余（over-parameterization）</a><a class="toc-level-3" href="#2-特例：k2-退化成逻辑回归">2. 特例： 退化成逻辑回归</a><a class="toc-level-2" href="#四、损失函数与极大似然">四、损失函数与极大似然</a><a class="toc-level-2" href="#五、梯度（形式非常漂亮）">五、梯度（形式非常漂亮）</a><a class="toc-level-2" href="#六、实现要点（工程上最容易踩的坑）">六、实现要点（工程上最容易踩的坑）</a><a class="toc-level-2" href="#七、容易混淆的对照">七、容易混淆的对照</a><a class="toc-level-2" href="#小结">小结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

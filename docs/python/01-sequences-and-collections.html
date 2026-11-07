@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="列表、元组、集合和序列操作。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="序列与集合 · Mingjv Li Notes">
+  <meta property="og:description" content="列表、元组、集合和序列操作。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>序列与集合 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-amber">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">Python</a><span>程序设计基础</span></div>
+        <nav aria-label="Course notes"><a class="is-current" href="01-sequences-and-collections.html">
+        <span>01</span>序列与集合
+      </a><a class="" href="02-strings.html">
+        <span>02</span>字符串
+      </a><a class="" href="03-dictionaries.html">
+        <span>03</span>字典
+      </a><a class="" href="04-control-flow.html">
+        <span>04</span>条件、循环与代码组织
+      </a><a class="" href="05-functions.html">
+        <span>05</span>函数
+      </a><a class="" href="06-encapsulation.html">
+        <span>06</span>封装
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-files-and-streams.html">
+        <span>08</span>文件与流
+      </a><a class="" href="09-dunder-properties-iterators.html">
+        <span>09</span>特殊方法、属性与迭代器
+      </a><a class="" href="10-numpy-matplotlib.html">
+        <span>10</span>NumPy 与 Matplotlib
+      </a><a class="" href="11-pandas.html">
+        <span>11</span>Pandas 数据分析
+      </a><a class="" href="12-regex-json-csv.html">
+        <span>12</span>正则表达式、JSON 与 CSV
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">Python</a><span>/</span><span>Language and control flow</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">Python · Language and control flow</p>
+          <h1>序列与集合</h1>
+          <p class="note-summary">列表、元组、集合和序列操作。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>1 / 12</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><p>split 分隔制表；
+function = 独立的工具
+method = 属于某个东西的专用工具**      ==**得加“.”使用</p>
+<p>序列：
+分片:</p>
+<ul>
+<li>-e g ：<code>num[1,2,3,4,5,6]</code></li>
+</ul>
+<blockquote>
+<blockquote>
+<p><code>- num[3:5]</code>
+<code>- 4,5</code>                                            **==左闭右开（按照指引）</p>
+</blockquote>
+</blockquote>
+<p>步长：在用右往左取数组时，用负数表示步长</p>
+<p>序列重复：用数字乘一个序列会形成一个新数列</p>
+<p>in运算符（用于判断成员资格）：</p>
+<ul>
+<li>
+<p><strong>list：</strong></p>
+</li>
+<li>
+<p>append：</p>
+</li>
+<li>
+<p>count：仅仅统计顶层元素</p>
+</li>
+<li>
+<p>extend(seq)：批量追加另一序列所有元素</p>
+</li>
+<li>
+<p>index：</p>
+</li>
+<li>
+<p>insert（pos,obj）：将对象插入到列表中的指定位置</p>
+</li>
+<li>
+<p>pop(pos-1)：移除列表最后一个，并返回该值</p>
+</li>
+<li>
+<p>remove：去掉某一个</p>
+</li>
+<li>
+<p>reverse()：反向存放（永久修改）</p>
+</li>
+<li>
+<p>reversed：不会修改原数列，生成副本</p>
+</li>
+<li>
+<p>sort()：排序 “。·~”</p>
+</li>
+<li>
+<p>sorted：不改变原数列的排序“~（）”</p>
+</li>
+<li></li>
+<li>
+<p><strong>元组：</strong> tuple：创建：<mark>()</mark>，加逗号</p>
+</li>
+<li></li>
+<li>
+<p><strong>range(start,stop,step)：用于生成一个==不可变</strong>==的数字序列，惰性计算</p>
+</li>
+<li></li>
+</ul>
+<p>集合set：不允许有重复元素，无次序,<strong>只能通过for循环遍历</strong></p>
+<p>创建集合（{}）：1.可以是不同类型的元素
+2.s = {} ——创建空集
+eg:set([1,3,5])：从列表中创建
+set((1,3,5))：从元组中创建
+通过add（），remove（），discard（）<strong>集合.discard(要删除的元素)</strong> 来增加，删除，增加/删减元素 <strong><mark>必须是可哈希（hashable）的</mark></strong></p>
+<p><strong>若要删除的元素不存在，remove会报错，discard不会</strong></p>
+<p>子集，超集：issubset，issuperset</p>
+<p>可以使用==，!=来判断集合的相等与不等==
+并集：union
+“ | ”：和
+“ - ”：差集
+“ ^ ”：对称差（去掉同时有的元素）</p>
+<p>集合推导式：</p>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev disabled"><span>Previous</span><strong>First note</strong></a>
+    <a class="next" href="02-strings.html"><span>Next</span><strong>字符串</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><span class="muted">Short note</span></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

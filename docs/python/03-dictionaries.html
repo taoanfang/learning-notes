@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="键值映射、查找、更新和字典的典型使用方式。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="字典 · Mingjv Li Notes">
+  <meta property="og:description" content="键值映射、查找、更新和字典的典型使用方式。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>字典 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-amber" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-amber">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">Python</a><span>程序设计基础</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-sequences-and-collections.html">
+        <span>01</span>序列与集合
+      </a><a class="" href="02-strings.html">
+        <span>02</span>字符串
+      </a><a class="is-current" href="03-dictionaries.html">
+        <span>03</span>字典
+      </a><a class="" href="04-control-flow.html">
+        <span>04</span>条件、循环与代码组织
+      </a><a class="" href="05-functions.html">
+        <span>05</span>函数
+      </a><a class="" href="06-encapsulation.html">
+        <span>06</span>封装
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-files-and-streams.html">
+        <span>08</span>文件与流
+      </a><a class="" href="09-dunder-properties-iterators.html">
+        <span>09</span>特殊方法、属性与迭代器
+      </a><a class="" href="10-numpy-matplotlib.html">
+        <span>10</span>NumPy 与 Matplotlib
+      </a><a class="" href="11-pandas.html">
+        <span>11</span>Pandas 数据分析
+      </a><a class="" href="12-regex-json-csv.html">
+        <span>12</span>正则表达式、JSON 与 CSV
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">Python</a><span>/</span><span>Language and control flow</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">Python · Language and control flow</p>
+          <h1>字典</h1>
+          <p class="note-summary">键值映射、查找、更新和字典的典型使用方式。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>3 / 12</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="字典的本质：映射（mapping）key–value-" tabindex="-1">字典的本质：映射（mapping）key–value  {}</h2>
+<h3 id="key必须可哈希，且不可变" tabindex="-1">key必须可哈希，且不可变</h3>
+<p><mark>本质原因：字典通过“hash(key)”来查找</mark></p>
+<h2 id="哈希表原理（set，dict）——“计算位置”" tabindex="-1">哈希表原理（set，dict）——<mark>“计算位置”</mark></h2>
+<h3 id="key-→-hash-（哈希）函数-→-数组下标（-index-）→直接访问" tabindex="-1">key → hash （哈希）函数 → 数组下标（ index ）→直接访问</h3>
+<h3 id="哈希函数：将任意键值投入函数中，计算其位置" tabindex="-1">哈希函数：将任意键值投入函数中，计算其位置</h3>
+<h2 id="字典的操作，时空间复杂度" tabindex="-1">字典的操作，时空间复杂度</h2>
+<h3 id="字典构造" tabindex="-1">字典构造</h3>
+<p><code>D={} # 构造空字典</code>
+<code>D={'name':'Bob','age':40}</code>
+<code>E={'cto':{'name':'Bob','age':40}} # 字典中的嵌套</code>
+<code>print(D)</code>
+<code>{'name':'Bob', 'age':40}</code>
+<code>print(E)</code>
+<code>{'cto':{'name':'BOb', 'age':40}}</code>
+<code>D = dict(name=‘Bob’, age=40) #</code>字典的第二种构造方法，使用关键字参数方式构造字典，将参数名作为键<code> </code>E = dict([(‘name’, ‘Bob’), (‘age’, 40)])<code> #</code>第三种构造方法，用列表套元组创建字典<code> </code>print(D)<code> </code>{‘name’: ‘Bob’, ‘age’: 40}<code> </code>print(E)<code> </code>{‘name’: ‘Bob’, ‘age’: 40}<code> #</code>第四种方法，用 zip 打包两个列表创建<code> </code>keys = [“name”, “age”] values = [&quot; 张三 &quot;, 20]<code> </code>d = dict(zip(keys, values))
+<code>d.keys()</code>：返回所有键的视图对象
+<code>d.values()</code>：返回所有值的视图对象
+<code>d.items()</code>：返回所有 (键，值) 元组，最常用于遍历`</p>
+<h4 id="安全访问" tabindex="-1">安全访问</h4>
+<ul>
+<li><code>d.get(key, default=None)</code>：键不存在不报错，返回 None 或自定义默认值</li>
+<li><code>d.setdefault(key, default)</code>：键不存在则新增键和默认值，同时返回对应值</li>
+</ul>
+<h4 id="更新与删除" tabindex="-1">更新与删除</h4>
+<ul>
+<li><code>d.update(另一个字典)</code>：批量更新，已有键覆盖，新键自动新增</li>
+<li><code>d.pop(key)</code>：删除键并返回对应值，键不存在报错</li>
+<li><code>d.popitem()</code>：删除最后插入的键值对（LIFO 栈行为）</li>
+<li><code>d.clear()</code>：原地清空所有键值对，无返回值</li>
+</ul>
+<h4 id="拷贝" tabindex="-1">拷贝</h4>
+<ul>
+<li><code>d.copy()</code>：<strong>浅拷贝</strong>，只复制第一层，嵌套的可变对象共用引用</li>
+<li>深拷贝：<code>import copy; copy.deepcopy(d)</code>，递归复制所有层级，新旧对象完全独立</li>
+<li>浅拷贝其他实现：<code>dict(d)</code>、列表 <code>[:]</code>、<code>list(列表)</code></li>
+</ul>
+<h3 id="key-in-dict判断，返回值为tf" tabindex="-1">key in dict(判断)，返回值为T/F</h3>
+<h2 id="字典的现代用法" tabindex="-1">字典的现代用法</h2>
+<h3 id="字典推导式：语法：kv-for-变量-in-可迭代对象" tabindex="-1">字典推导式：语法：{k:v for 变量 in 可迭代对象}</h3>
+<p><mark>key若重复，保留最后一赋值</mark></p>
+<h2 id="字典，列表，集合对比" tabindex="-1">字典，列表，集合对比</h2>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="02-strings.html"><span>Previous</span><strong>字符串</strong></a>
+    <a class="next" href="04-control-flow.html"><span>Next</span><strong>条件、循环与代码组织</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#字典的本质：映射（mapping）key–value-">字典的本质：映射（mapping）key--value {}</a><a class="toc-level-3" href="#key必须可哈希，且不可变">key必须可哈希，且不可变</a><a class="toc-level-2" href="#哈希表原理（set，dict）——“计算位置”">哈希表原理（set，dict）—— “计算位置”</a><a class="toc-level-3" href="#key-→-hash-（哈希）函数-→-数组下标（-index-）→直接访问">key → hash （哈希）函数 → 数组下标（ index ）→直接访问</a><a class="toc-level-3" href="#哈希函数：将任意键值投入函数中，计算其位置">哈希函数：将任意键值投入函数中，计算其位置</a><a class="toc-level-2" href="#字典的操作，时空间复杂度">字典的操作，时空间复杂度</a><a class="toc-level-3" href="#字典构造">字典构造</a><a class="toc-level-3" href="#key-in-dict判断，返回值为tf">key in dict(判断)，返回值为T/F</a><a class="toc-level-2" href="#字典的现代用法">字典的现代用法</a><a class="toc-level-3" href="#字典推导式：语法：kv-for-变量-in-可迭代对象">字典推导式：语法：{k:v for 变量 in 可迭代对象}</a><a class="toc-level-2" href="#字典，列表，集合对比">字典，列表，集合对比</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Big-O、Big-Theta、Quick Find、Quick Union、按秩合并与路径压缩。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="增长阶与并查集 · Mingjv Li Notes">
+  <meta property="og:description" content="Big-O、Big-Theta、Quick Find、Quick Union、按秩合并与路径压缩。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>增长阶与并查集 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-teal">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS61B</a><span>Java 与数据结构</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-java-oop-encapsulation.html">
+        <span>01</span>Java 面向对象与封装
+      </a><a class="" href="02-inheritance-interfaces.html">
+        <span>02</span>继承、抽象类与接口
+      </a><a class="" href="03-polymorphism-inner-classes.html">
+        <span>03</span>多态与内部类
+      </a><a class="" href="04-generics.html">
+        <span>04</span>Java 泛型
+      </a><a class="" href="05-java-api.html">
+        <span>05</span>Java API：字符串、包装类与正则
+      </a><a class="" href="06-collections-iterators.html">
+        <span>06</span>集合与迭代器
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-io-streams.html">
+        <span>08</span>文件与 IO 流
+      </a><a class="" href="09-multithreading.html">
+        <span>09</span>多线程
+      </a><a class="" href="10-network-programming.html">
+        <span>10</span>网络编程
+      </a><a class="" href="11-adt-and-algorithms.html">
+        <span>11</span>ADT 与算法基础
+      </a><a class="" href="12-linear-lists.html">
+        <span>12</span>线性表
+      </a><a class="" href="13-stacks-and-queues.html">
+        <span>13</span>栈与队列
+      </a><a class="" href="14-linked-lists-recursion.html">
+        <span>14</span>链表与递归数据结构
+      </a><a class="" href="15-doubly-linked-lists.html">
+        <span>15</span>双向链表与动态数组
+      </a><a class="" href="16-generic-collections.html">
+        <span>16</span>泛型集合入门
+      </a><a class="" href="17-comparable-comparator.html">
+        <span>17</span>多态、Comparable 与 Comparator
+      </a><a class="is-current" href="18-asymptotics-union-find.html">
+        <span>18</span>增长阶与并查集
+      </a><a class="" href="19-binary-search-trees.html">
+        <span>19</span>二叉搜索树
+      </a><a class="" href="20-b-trees.html">
+        <span>20</span>B 树
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS61B</a><span>/</span><span>Core data structures</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS61B · Core data structures</p>
+          <h1>增长阶与并查集</h1>
+          <p class="note-summary">Big-O、Big-Theta、Quick Find、Quick Union、按秩合并与路径压缩。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>18 / 20</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="order-of-growth（增长阶）" tabindex="-1">Order of Growth（增长阶）</h2>
+<h3 id="big-o-是“上界”：" tabindex="-1"><strong>Big-O</strong> 是“<mark>上界</mark>”：</h3>
+<p>说 <code>f(N) = O(g(N))</code>，意思是当 <code>N</code> 很大时，<code>f</code> 不会比 <code>g</code> 长得更快得离谱。你可以把它理解成“最多这么慢”或“不会超过这个量级”。</p>
+<h3 id="big-theta-是“紧确界”：" tabindex="-1">Big-Theta** 是“<mark>紧确界</mark>”：</h3>
+<p>说 <code>f(N) = Θ(g(N))</code>，意思是 <code>f</code> 既不会比 <code>g</code> 快很多，也不会比 <code>g</code> 慢很多，二者在增长速度上是同一个量级。你可以把它理解成“就是这个量级”。</p>
+<h2 id="问题导入：动态连通性（dynamic-connectivity）" tabindex="-1">问题导入：动态连通性（Dynamic Connectivity）</h2>
+<h3 id="初始实现方案：listsetinteger（将一群set联通，使其能够进行内部联合访问）" tabindex="-1">初始实现方案：<code>List&lt;Set&lt;Integer&gt;&gt;</code>（将一群set联通，使其能够进行内部联合访问）</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>构造器</td>
+<td>Θ(N)</td>
+<td>初始化时为每个元素创建单元素集合，时间与元素总数 <code>N</code> 成正比</td>
+</tr>
+<tr>
+<td><code>connect(x,y)</code></td>
+<td>O(N)</td>
+<td>1. 遍历列表找到 <code>x</code> 和 <code>y</code> 所在的集合（最坏遍历 <code>N</code> 次）<br><br>2. 合并两个集合（拷贝其中一个集合的所有元素，最坏 O (N)）<br><br>注：最坏情况为 Θ(N)，用 O (N) 表示 “运行时间不超过线性”</td>
+</tr>
+<tr>
+<td><code>isConnected(x,y)</code></td>
+<td>O(N)</td>
+<td>先遍历列表找到 <code>x</code> 所在集合（O (N)），再检查 <code>y</code> 是否在集合中（HashSet 内为 O (1)），整体为 O (N)</td>
+</tr>
+<tr>
+<td><mark>但是</mark>，connect和isConnected方法均为线性，当计算级数大的时候，会超时，而导致其的根本原因为：<strong>每次操作需要遍历 / 拷贝整个集合，没有利用集合的层级关系优化操作</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>下面，我们开始优化：</p>
+<h2 id="quick-find（用整数数组代替list（set））" tabindex="-1">Quick Find（用整数数组代替list（Set））</h2>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>构造器（初始化）</td>
+<td>Θ(N)</td>
+<td>初始化时，每个元素的<code>id[i] = i</code>（自己是自己集合的 id），需要遍历整个数组</td>
+</tr>
+<tr>
+<td><code>isConnected</code></td>
+<td>O(1)</td>
+<td>直接比较两个值，一步完成</td>
+</tr>
+<tr>
+<td><code>connect</code></td>
+<td>O(N)</td>
+<td>每次合并都要遍历整个数组，修改所有和<code>pid</code>相同的元素，时间和元素总数<code>N</code>成正比</td>
+</tr>
+</tbody>
+</table>
+<p>欸，我们注意到isConnect时间缩短了（相当于做了个<mark>字典</mark>），但是connect<strong>操作还是需要全扫一遍数组</strong>,这时候，就得请出宗门老祖了————<strong><mark>树状结构</mark></strong></p>
+<h2 id="quick-union" tabindex="-1">Quick Union</h2>
+<p><strong>整体逻辑结构：</strong></p>
+<ul>
+<li><code>parent[i]</code>：元素<code>i</code>的直接父节点</li>
+<li>根节点：父节点指向自身 / 标记 - 1，会顺着父节点一路回溯</li>
+<li>同一棵树 = 同一个连通集合</li>
+</ul>
+<p>这个东西优化了合并速度，干成O(1)了，读取速度略慢，最坏变为O(n)的链表，其效率取决于树的高度</p>
+<p>以此，我们要引入新的东西，让他不容易退化成链表，于是</p>
+<h2 id="weighted-quick-union（让树匀称一点，既不宽也不长）" tabindex="-1">Weighted Quick Union（让树匀称一点，既不宽也不长）</h2>
+<h3 id="path-compression" tabindex="-1">path Compression</h3>
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260528210424.png" alt="Pasted image 20260528210424">
+<h2 id="big-omegaω（lower-round-bound）" tabindex="-1">Big OmegaΩ（lower round bound）</h2>
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260529213321.png" alt="Pasted image 20260529213321">
+<h1 id="there-is-no-magic-shortcut-for-asymptotic-analysis" tabindex="-1"><mark>There is No Magic Shortcut for Asymptotic Analysis</mark></h1>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="17-comparable-comparator.html"><span>Previous</span><strong>多态、Comparable 与 Comparator</strong></a>
+    <a class="next" href="19-binary-search-trees.html"><span>Next</span><strong>二叉搜索树</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#order-of-growth（增长阶）">Order of Growth（增长阶）</a><a class="toc-level-3" href="#big-o-是“上界”：">Big-O 是“ 上界 ”：</a><a class="toc-level-3" href="#big-theta-是“紧确界”：">Big-Theta 是“ 紧确界 ”：</a><a class="toc-level-2" href="#问题导入：动态连通性（dynamic-connectivity）">问题导入：动态连通性（Dynamic Connectivity）</a><a class="toc-level-3" href="#初始实现方案：listsetinteger（将一群set联通，使其能够进行内部联合访问）">初始实现方案： List （将一群set联通，使其能够进行内部联合访问）</a><a class="toc-level-2" href="#quick-find（用整数数组代替list（set））">Quick Find（用整数数组代替list（Set））</a><a class="toc-level-2" href="#quick-union">Quick Union</a><a class="toc-level-2" href="#weighted-quick-union（让树匀称一点，既不宽也不长）">Weighted Quick Union（让树匀称一点，既不宽也不长）</a><a class="toc-level-3" href="#path-compression">path Compression</a><a class="toc-level-2" href="#big-omegaω（lower-round-bound）">Big OmegaΩ（lower round bound）</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

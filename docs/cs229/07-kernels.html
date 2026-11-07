@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="核技巧、常见核函数、Mercer 定理与软间隔 SVM。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="核方法与 SVM 对偶 · Mingjv Li Notes">
+  <meta property="og:description" content="核技巧、常见核函数、Mercer 定理与软间隔 SVM。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>核方法与 SVM 对偶 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-blue" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-blue">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS229</a><span>Machine Learning</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-linear-regression.html">
+        <span>01</span>线性回归与梯度下降
+      </a><a class="" href="02-weighted-logistic-regression.html">
+        <span>02</span>局部加权与逻辑回归
+      </a><a class="" href="03-perceptron-glm.html">
+        <span>03</span>感知机与广义线性模型
+      </a><a class="" href="04-softmax-regression.html">
+        <span>04</span>Softmax 回归
+      </a><a class="" href="05-gda-naive-bayes.html">
+        <span>05</span>GDA 与朴素贝叶斯
+      </a><a class="" href="06-support-vector-machines.html">
+        <span>06</span>支持向量机
+      </a><a class="is-current" href="07-kernels.html">
+        <span>07</span>核方法与 SVM 对偶
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS229</a><span>/</span><span>Margins, duality, and kernels</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS229 · Margins, duality, and kernels</p>
+          <h1>核方法与 SVM 对偶</h1>
+          <p class="note-summary">核技巧、常见核函数、Mercer 定理与软间隔 SVM。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>7 / 7</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><blockquote>
+<p>视频来源: <a href="https://www.youtube.com/watch?v=8NYoQiRANpg">https://www.youtube.com/watch?v=8NYoQiRANpg</a>
+Stanford CS229: Machine Learning (Autumn 2018) - Andrew Ng</p>
+</blockquote>
+<hr>
+<h2 id="1-svm-回顾：大间隔分类器" tabindex="-1">1. SVM 回顾：大间隔分类器</h2>
+<h3 id="11-从逻辑回归到svm" tabindex="-1">1.1 从逻辑回归到SVM</h3>
+<p>逻辑回归的假设函数：
+$$h_\theta(x) = \frac{1}{1+e^{-\theta^Tx}}$$</p>
+<ul>
+<li>当 $y=1$ 时，我们希望 $\theta^Tx \gg 0$（置信度高）</li>
+<li>当 $y=0$ 时，我们希望 $\theta^Tx \ll 0$</li>
+</ul>
+<p>SVM 替换了逻辑回归的对数代价函数，采用分段的 <code>cost₁(z)</code> 和 <code>cost₀(z)</code>：</p>
+<ul>
+<li>$y=1$ 时：不仅要求 $\theta^Tx \ge 0$，更进一步要求 $\theta^Tx \ge 1$</li>
+<li>$y=0$ 时：不仅要求 $\theta^Tx &lt; 0$，更进一步要求 $\theta^Tx \le -1$</li>
+</ul>
+<p>这相当于在分类器中加入了<strong>安全间隔（margin）</strong>。</p>
+<h3 id="12-svm-优化目标" tabindex="-1">1.2 SVM 优化目标</h3>
+<p>$$\min_\theta ; C \sum_{i=1}^m \left[ y^{(i)} cost_1(\theta^Tx^{(i)}) + (1-y^{(i)}) cost_0(\theta^Tx^{(i)}) \right] + \frac{1}{2}\sum_{j=1}^n \theta_j^2$$</p>
+<p>与逻辑回归的对应关系：</p>
+<ul>
+<li>逻辑回归：$A + \lambda B$</li>
+<li>SVM：$CA + B$，其中 $C = 1/\lambda$</li>
+</ul>
+<h3 id="13-大间隔直觉" tabindex="-1">1.3 大间隔直觉</h3>
+<ul>
+<li>参数 $C$ 很大时：SVM 会尽可能将所有样本正确分类，对异常点敏感</li>
+<li>参数 $C$ 较小时：允许一些误分类，决策边界更鲁棒</li>
+</ul>
+<p>SVM 会选择离最近样本点最远的决策边界，即<strong>最大化几何间隔</strong>。</p>
+<hr>
+<h2 id="2-向量内积与几何意义" tabindex="-1">2. 向量内积与几何意义</h2>
+<h3 id="21-内积定义" tabindex="-1">2.1 内积定义</h3>
+<p>对于向量 $u, v \in \mathbb{R}^n$：
+$$u^Tv = |u| \cdot p$$</p>
+<p>其中 $p$ 是 $v$ 在 $u$ 方向上的投影长度。</p>
+<ul>
+<li>夹角 &lt; 90°：$p &gt; 0$</li>
+<li>夹角 &gt; 90°：$p &lt; 0$</li>
+</ul>
+<h3 id="22-简化形式下的svm" tabindex="-1">2.2 简化形式下的SVM</h3>
+<p>令 $\theta_0 = 0$，SVM 优化问题可写为：</p>
+<p>$$\min_\theta \frac{1}{2}|\theta|^2$$
+$$\text{s.t. } p^{(i)} \cdot |\theta| \ge 1 \quad \text{if } y^{(i)}=1$$
+$$\text{s.t. } p^{(i)} \cdot |\theta| \le -1 \quad \text{if } y^{(i)}=0$$</p>
+<p>其中 $p^{(i)}$ 是 $x^{(i)}$ 在 $\theta$ 方向上的投影。</p>
+<p>最小化 $|\theta|$ 等价于最大化样本点到决策边界的几何间隔。</p>
+<hr>
+<h2 id="3-svm-对偶形式推导" tabindex="-1">3. SVM 对偶形式推导</h2>
+<h3 id="31-原始问题（primal）" tabindex="-1">3.1 原始问题（Primal）</h3>
+<p>硬间隔SVM的原始优化问题：</p>
+<p>$$\min_{w,b} \frac{1}{2}|w|^2$$
+$$\text{s.t. } y^{(i)}(w^Tx^{(i)} + b) \ge 1, \quad i=1,…,m$$</p>
+<blockquote>
+<p>注：约束将函数间隔固定为1，此时几何间隔 = $1/|w|$，最小化 $|w|^2$ 即最大化几何间隔。</p>
+</blockquote>
+<h3 id="32-构建拉格朗日函数" tabindex="-1">3.2 构建拉格朗日函数</h3>
+<p>将约束改写为 $g_i(w,b) = 1 - y^{(i)}(w^Tx^{(i)}+b) \le 0$，拉格朗日函数：</p>
+<p>$$\mathcal{L}(w,b,\alpha) = \frac{1}{2}|w|^2 - \sum_{i=1}^m \alpha_i \left[ y^{(i)}(w^Tx^{(i)}+b) - 1 \right]$$</p>
+<p>其中 $\alpha_i \ge 0$ 是拉格朗日乘子。</p>
+<h3 id="33-对原始变量求偏导并置零" tabindex="-1">3.3 对原始变量求偏导并置零</h3>
+<p><strong>对 $w$ 求导：</strong>
+$$\nabla_w \mathcal{L} = w - \sum_{i=1}^m \alpha_i y^{(i)} x^{(i)} = 0$$
+$$\Rightarrow w = \sum_{i=1}^m \alpha_i y^{(i)} x^{(i)}$$</p>
+<blockquote>
+<p>重要结论：最优权重向量 $w$ 是训练样本的线性组合，系数为 $\alpha_i y^{(i)}$。$\alpha_i = 0$ 的样本对 $w$ 没有贡献。</p>
+</blockquote>
+<p><strong>对 $b$ 求导：</strong>
+$$\frac{\partial \mathcal{L}}{\partial b} = -\sum_{i=1}^m \alpha_i y^{(i)} = 0$$
+$$\Rightarrow \sum_{i=1}^m \alpha_i y^{(i)} = 0$$</p>
+<h3 id="34-代回得到对偶函数" tabindex="-1">3.4 代回得到对偶函数</h3>
+<p>将 $w = \sum_i \alpha_i y^{(i)} x^{(i)}$ 和 $\sum_i \alpha_i y^{(i)} = 0$ 代回拉格朗日函数，化简后得到：</p>
+<p>$$\theta_\mathcal{D}(\alpha) = \sum_{i=1}^m \alpha_i - \frac{1}{2}\sum_{i=1}^m\sum_{j=1}^m \alpha_i \alpha_j y^{(i)} y^{(j)} \langle x^{(i)}, x^{(j)} \rangle$$</p>
+<h3 id="35-对偶优化问题（dual）" tabindex="-1">3.5 对偶优化问题（Dual）</h3>
+<p>$$\max_\alpha \sum_{i=1}^m \alpha_i - \frac{1}{2}\sum_{i,j} \alpha_i \alpha_j y^{(i)} y^{(j)} \langle x^{(i)}, x^{(j)} \rangle$$</p>
+<p>约束条件：</p>
+<ul>
+<li>$\alpha_i \ge 0, \quad i=1,…,m$</li>
+<li>$\sum_{i=1}^m \alpha_i y^{(i)} = 0$</li>
+</ul>
+<hr>
+<h2 id="4-kkt-条件与支持向量" tabindex="-1">4. KKT 条件与支持向量</h2>
+<h3 id="41-kkt-四个条件" tabindex="-1">4.1 KKT 四个条件</h3>
+<ol>
+<li><strong>稳定性条件</strong>：拉格朗日对 $w, b$ 的梯度为零（已用于推导）</li>
+<li><strong>原始可行性</strong>：$y^{(i)}(w^Tx^{(i)}+b) \ge 1$ 对所有 $i$ 成立</li>
+<li><strong>对偶可行性</strong>：$\alpha_i \ge 0$ 对所有 $i$ 成立</li>
+<li><strong>互补松弛条件</strong>：$\alpha_i \left[ y^{(i)}(w^Tx^{(i)}+b) - 1 \right] = 0$</li>
+</ol>
+<h3 id="42-支持向量的定义" tabindex="-1">4.2 支持向量的定义</h3>
+<p>由互补松弛条件可知，对于每个训练样本：</p>
+<ul>
+<li>要么 $\alpha_i = 0$ → 该样本不影响 $w$，<strong>不是支持向量</strong></li>
+<li>要么 $y^{(i)}(w^Tx^{(i)}+b) = 1$ → 样本恰好位于间隔边界上，<strong>是支持向量</strong></li>
+</ul>
+<p>只有 $\alpha_i &gt; 0$ 的样本才是支持向量，它们决定了决策边界。</p>
+<h3 id="43-恢复偏置-b" tabindex="-1">4.3 恢复偏置 $b$</h3>
+<p>任选一个支持向量 $i^<em>$（$\alpha_{i^</em>} &gt; 0$），利用：
+$$y^{(i^<em>)}(w^Tx^{(i^</em>)} + b) = 1$$
+$$\Rightarrow b = y^{(i^<em>)} - w^Tx^{(i^</em>)}$$</p>
+<p>实际应用中通常对所有支持向量的 $b$ 取平均以提高数值稳定性。</p>
+<hr>
+<h2 id="5-核技巧（kernel-trick）" tabindex="-1">5. 核技巧（Kernel Trick）</h2>
+<h3 id="51-为什么需要核技巧" tabindex="-1">5.1 为什么需要核技巧</h3>
+<p>观察对偶目标函数：
+$$\sum_{i,j} \alpha_i \alpha_j y^{(i)} y^{(j)} \langle x^{(i)}, x^{(j)} \rangle$$</p>
+<p><strong>特征 $x^{(i)}$ 只以内积 $\langle x^{(i)}, x^{(j)} \rangle$ 的形式出现</strong>，从不单独出现。</p>
+<p>这意味着：如果我们想把数据映射到高维空间 $\phi(x)$ 以学习非线性边界，我们<strong>永远不需要显式计算 $\phi(x)$</strong>，只需要一个函数直接返回映射后的内积：</p>
+<p>$$K(x, z) = \langle \phi(x), \phi(z) \rangle = \phi(x)^T \phi(z)$$</p>
+<p>这个函数 $K$ 就叫做<strong>核函数</strong>。</p>
+<h3 id="52-核技巧的核心思想" tabindex="-1">5.2 核技巧的核心思想</h3>
+<blockquote>
+<p>把对偶问题中所有的内积 $\langle x^{(i)}, x^{(j)} \rangle$ 替换为核函数 $K(x^{(i)}, x^{(j)})$，就隐式地将数据映射到了高维特征空间，而不需要付出高维计算的代价。</p>
+</blockquote>
+<p>最终分类器变为：
+$$f(x) = \text{sign}\left( \sum_{i=1}^m \alpha_i y^{(i)} K(x^{(i)}, x) + b \right)$$</p>
+<hr>
+<h2 id="6-常见核函数" tabindex="-1">6. 常见核函数</h2>
+<h3 id="61-线性核" tabindex="-1">6.1 线性核</h3>
+<p>$$K(x, z) = x^T z$$</p>
+<p>就是原始内积，相当于不做特征映射。适用于特征维度已经很高、样本量很大的场景。</p>
+<h3 id="62-多项式核" tabindex="-1">6.2 多项式核</h3>
+<p>$$K(x, z) = (x^T z + c)^d$$</p>
+<p>对应将特征映射到所有 $d$ 阶多项式组合的空间。例如 $d=2, c=1$ 时，2维输入映射到6维空间（包含交叉项 $x_1x_2, x_1^2, x_2^2$ 等）。</p>
+<h3 id="63-高斯核（rbf核）" tabindex="-1">6.3 高斯核（RBF核）</h3>
+<p>$$K(x, z) = \exp\left( -\frac{|x - z|^2}{2\sigma^2} \right)$$</p>
+<ul>
+<li>也称为径向基函数（Radial Basis Function）核</li>
+<li>对应一个<strong>无限维</strong>的特征映射 $\phi(x)$</li>
+<li>衡量样本点 $x$ 与锚点 $z$ 之间的相似度：距离越近，核值越接近1；距离越远，核值越接近0</li>
+<li>$\sigma$ 是带宽参数，控制高斯函数的&quot;宽度&quot;</li>
+</ul>
+<blockquote>
+<p>直观理解：高斯核SVM相当于在每个训练样本 $x^{(i)}$ 处放置一个高斯钟形函数，最终决策面是这些钟形函数的加权叠加。</p>
+</blockquote>
+<hr>
+<h2 id="7-mercer-定理" tabindex="-1">7. Mercer 定理</h2>
+<h3 id="71-核的有效性判定" tabindex="-1">7.1 核的有效性判定</h3>
+<p>给定函数 $K: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$，$K$ 是合法核（Mercer核）的充要条件是：</p>
+<blockquote>
+<p>对于任意有限个样本 ${x^{(1)}, …, x^{(m)}}$，对应的核矩阵 $K_{ij} = K(x^{(i)}, x^{(j)})$ 是<strong>对称半正定矩阵</strong>。</p>
+</blockquote>
+<h3 id="72-意义" tabindex="-1">7.2 意义</h3>
+<p>Mercer 定理告诉我们：不需要找到对应的特征映射 $\phi$，只需要检查核矩阵是否半正定，就能判断一个函数能否作为核使用。这极大地扩展了核函数的设计空间。</p>
+<hr>
+<h2 id="8-软间隔svm（soft-margin）" tabindex="-1">8. 软间隔SVM（Soft Margin）</h2>
+<h3 id="81-动机" tabindex="-1">8.1 动机</h3>
+<p>硬间隔SVM要求数据完全线性可分，对噪声和异常点非常敏感。软间隔引入松弛变量 $\xi_i$ 允许一些样本违反间隔约束：</p>
+<p>$$\min_{w,b,\xi} \frac{1}{2}|w|^2 + C \sum_{i=1}^m \xi_i$$
+$$\text{s.t. } y^{(i)}(w^Tx^{(i)}+b) \ge 1 - \xi_i, \quad \xi_i \ge 0$$</p>
+<h3 id="82-软间隔对偶" tabindex="-1">8.2 软间隔对偶</h3>
+<p>对偶目标函数形式不变，唯一区别是约束增加了上界：</p>
+<p>$$0 \le \alpha_i \le C$$</p>
+<p>原来的 $\alpha_i \ge 0$ 变成了 $0 \le \alpha_i \le C$，这就是所谓的<strong>箱型约束（box constraint）</strong>。</p>
+<p>参数 $C$ 的含义：</p>
+<ul>
+<li>$C$ 越大：对误分类惩罚越重，越接近硬间隔</li>
+<li>$C$ 越小：允许更多误分类，决策边界更平滑，正则化更强</li>
+</ul>
+<hr>
+<h2 id="9-本课关键要点总结" tabindex="-1">9. 本课关键要点总结</h2>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>核心要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大间隔分类器</td>
+<td>最大化样本到决策边界的距离，比逻辑回归更鲁棒</td>
+</tr>
+<tr>
+<td>对偶形式</td>
+<td>原始问题通过拉格朗日对偶转化为关于 $\alpha$ 的优化问题</td>
+</tr>
+<tr>
+<td>支持向量</td>
+<td>只有 $\alpha_i &gt; 0$ 的样本决定决策边界，其余样本无影响</td>
+</tr>
+<tr>
+<td>核技巧</td>
+<td>将内积替换为核函数，隐式映射到高维空间，不显式计算 $\phi(x)$</td>
+</tr>
+<tr>
+<td>高斯核</td>
+<td>最常用的核函数，对应无限维特征空间，衡量样本间相似度</td>
+</tr>
+<tr>
+<td>Mercer定理</td>
+<td>核矩阵半正定是核函数合法的充要条件</td>
+</tr>
+<tr>
+<td>软间隔</td>
+<td>通过松弛变量和参数 $C$ 允许误分类，处理非线性可分数据</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="10-为什么对偶形式如此重要？" tabindex="-1">10. 为什么对偶形式如此重要？</h2>
+<ol>
+<li><strong>核技巧成为可能</strong>：对偶问题中数据只通过内积出现，才能用核函数替换</li>
+<li><strong>维度无关</strong>：对偶问题的变量数等于样本数 $m$，与特征维度无关。即使映射到无限维（RBF核），优化仍然是有限维的</li>
+<li><strong>稀疏性</strong>：大部分 $\alpha_i = 0$，只有少数支持向量起作用，预测效率高</li>
+<li><strong>通用方法论</strong>：拉格朗日对偶是机器学习中的通用工具，后续在高斯过程、正则化等主题中还会反复出现</li>
+</ol>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="06-support-vector-machines.html"><span>Previous</span><strong>支持向量机</strong></a>
+    <a class="next disabled"><span>Next</span><strong>End of course</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#1-svm-回顾：大间隔分类器">1. SVM 回顾：大间隔分类器</a><a class="toc-level-3" href="#11-从逻辑回归到svm">1.1 从逻辑回归到SVM</a><a class="toc-level-3" href="#12-svm-优化目标">1.2 SVM 优化目标</a><a class="toc-level-3" href="#13-大间隔直觉">1.3 大间隔直觉</a><a class="toc-level-2" href="#2-向量内积与几何意义">2. 向量内积与几何意义</a><a class="toc-level-3" href="#21-内积定义">2.1 内积定义</a><a class="toc-level-3" href="#22-简化形式下的svm">2.2 简化形式下的SVM</a><a class="toc-level-2" href="#3-svm-对偶形式推导">3. SVM 对偶形式推导</a><a class="toc-level-3" href="#31-原始问题（primal）">3.1 原始问题（Primal）</a><a class="toc-level-3" href="#32-构建拉格朗日函数">3.2 构建拉格朗日函数</a><a class="toc-level-3" href="#33-对原始变量求偏导并置零">3.3 对原始变量求偏导并置零</a><a class="toc-level-3" href="#34-代回得到对偶函数">3.4 代回得到对偶函数</a><a class="toc-level-3" href="#35-对偶优化问题（dual）">3.5 对偶优化问题（Dual）</a><a class="toc-level-2" href="#4-kkt-条件与支持向量">4. KKT 条件与支持向量</a><a class="toc-level-3" href="#41-kkt-四个条件">4.1 KKT 四个条件</a><a class="toc-level-3" href="#42-支持向量的定义">4.2 支持向量的定义</a><a class="toc-level-3" href="#43-恢复偏置-b">4.3 恢复偏置</a><a class="toc-level-2" href="#5-核技巧（kernel-trick）">5. 核技巧（Kernel Trick）</a><a class="toc-level-3" href="#51-为什么需要核技巧">5.1 为什么需要核技巧</a><a class="toc-level-3" href="#52-核技巧的核心思想">5.2 核技巧的核心思想</a><a class="toc-level-2" href="#6-常见核函数">6. 常见核函数</a><a class="toc-level-3" href="#61-线性核">6.1 线性核</a><a class="toc-level-3" href="#62-多项式核">6.2 多项式核</a><a class="toc-level-3" href="#63-高斯核（rbf核）">6.3 高斯核（RBF核）</a><a class="toc-level-2" href="#7-mercer-定理">7. Mercer 定理</a><a class="toc-level-3" href="#71-核的有效性判定">7.1 核的有效性判定</a><a class="toc-level-3" href="#72-意义">7.2 意义</a><a class="toc-level-2" href="#8-软间隔svm（soft-margin）">8. 软间隔SVM（Soft Margin）</a><a class="toc-level-3" href="#81-动机">8.1 动机</a><a class="toc-level-3" href="#82-软间隔对偶">8.2 软间隔对偶</a><a class="toc-level-2" href="#9-本课关键要点总结">9. 本课关键要点总结</a><a class="toc-level-2" href="#10-为什么对偶形式如此重要？">10. 为什么对偶形式如此重要？</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="List、Set、增强 for 循环与 Iterator 之间的关系。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="集合与迭代器 · Mingjv Li Notes">
+  <meta property="og:description" content="List、Set、增强 for 循环与 Iterator 之间的关系。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>集合与迭代器 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-teal">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS61B</a><span>Java 与数据结构</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-java-oop-encapsulation.html">
+        <span>01</span>Java 面向对象与封装
+      </a><a class="" href="02-inheritance-interfaces.html">
+        <span>02</span>继承、抽象类与接口
+      </a><a class="" href="03-polymorphism-inner-classes.html">
+        <span>03</span>多态与内部类
+      </a><a class="" href="04-generics.html">
+        <span>04</span>Java 泛型
+      </a><a class="" href="05-java-api.html">
+        <span>05</span>Java API：字符串、包装类与正则
+      </a><a class="is-current" href="06-collections-iterators.html">
+        <span>06</span>集合与迭代器
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-io-streams.html">
+        <span>08</span>文件与 IO 流
+      </a><a class="" href="09-multithreading.html">
+        <span>09</span>多线程
+      </a><a class="" href="10-network-programming.html">
+        <span>10</span>网络编程
+      </a><a class="" href="11-adt-and-algorithms.html">
+        <span>11</span>ADT 与算法基础
+      </a><a class="" href="12-linear-lists.html">
+        <span>12</span>线性表
+      </a><a class="" href="13-stacks-and-queues.html">
+        <span>13</span>栈与队列
+      </a><a class="" href="14-linked-lists-recursion.html">
+        <span>14</span>链表与递归数据结构
+      </a><a class="" href="15-doubly-linked-lists.html">
+        <span>15</span>双向链表与动态数组
+      </a><a class="" href="16-generic-collections.html">
+        <span>16</span>泛型集合入门
+      </a><a class="" href="17-comparable-comparator.html">
+        <span>17</span>多态、Comparable 与 Comparator
+      </a><a class="" href="18-asymptotics-union-find.html">
+        <span>18</span>增长阶与并查集
+      </a><a class="" href="19-binary-search-trees.html">
+        <span>19</span>二叉搜索树
+      </a><a class="" href="20-b-trees.html">
+        <span>20</span>B 树
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS61B</a><span>/</span><span>Java language foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS61B · Java language foundations</p>
+          <h1>集合与迭代器</h1>
+          <p class="note-summary">List、Set、增强 for 循环与 Iterator 之间的关系。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 1 min</span>
+            <span>6 / 20</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="list接口" tabindex="-1">List接口</h2>
+<h3 id="list接口继承自collection接口，list接口实例中允许存储重复的元素，所有的元素以线性方式进行存储。在程序中可以通过索引访问list接口实例中存储的元素。另外，list接口实例中存储的元素是有序的，即元素的存入顺序和取出顺序一致。" tabindex="-1">List接口继承自Collection接口，List接口实例中允许存储重复的元素，所有的元素以线性方式进行存储。在程序中可以通过索引访问List接口实例中存储的元素。另外，List接口实例中存储的元素是有序的，即元素的存入顺序和取出顺序一致。</h3>
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260511052322.png" alt="Pasted image 20260511052322">
+<h2 id="linkedlist" tabindex="-1">LinkedList</h2>
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260511053219.png" alt="Pasted image 20260511053219">
+<img src="../../docs/assets/images/cs61b/Pasted%20image%2020260511053253.png" alt="Pasted image 20260511053253">
+<h2 id="iterator" tabindex="-1">Iterator</h2>
+<h3 id="for-each" tabindex="-1">for each</h3>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="05-java-api.html"><span>Previous</span><strong>Java API：字符串、包装类与正则</strong></a>
+    <a class="next" href="07-exceptions.html"><span>Next</span><strong>异常处理</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#list接口">List接口</a><a class="toc-level-3" href="#list接口继承自collection接口，list接口实例中允许存储重复的元素，所有的元素以线性方式进行存储。在程序中可以通过索引访问list接口实例中存储的元素。另外，list接口实例中存储的元素是有序的，即元素的存入顺序和取出顺序一致。">List接口继承自Collection接口，List接口实例中允许存储重复的元素，所有的元素以线性方式进行存储。在程序中可以通过索引访问List接口实例中存储的元素。另外，List接口实例中存储的元素是有序的，即元素的存入顺序和取出顺序一致。</a><a class="toc-level-2" href="#linkedlist">LinkedList</a><a class="toc-level-2" href="#iterator">Iterator</a><a class="toc-level-3" href="#for-each">for each</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

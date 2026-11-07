@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="生成学习、多元高斯、高斯判别分析、朴素贝叶斯与 Laplace 平滑。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="GDA 与朴素贝叶斯 · Mingjv Li Notes">
+  <meta property="og:description" content="生成学习、多元高斯、高斯判别分析、朴素贝叶斯与 Laplace 平滑。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>GDA 与朴素贝叶斯 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-blue" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-blue">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS229</a><span>Machine Learning</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-linear-regression.html">
+        <span>01</span>线性回归与梯度下降
+      </a><a class="" href="02-weighted-logistic-regression.html">
+        <span>02</span>局部加权与逻辑回归
+      </a><a class="" href="03-perceptron-glm.html">
+        <span>03</span>感知机与广义线性模型
+      </a><a class="" href="04-softmax-regression.html">
+        <span>04</span>Softmax 回归
+      </a><a class="is-current" href="05-gda-naive-bayes.html">
+        <span>05</span>GDA 与朴素贝叶斯
+      </a><a class="" href="06-support-vector-machines.html">
+        <span>06</span>支持向量机
+      </a><a class="" href="07-kernels.html">
+        <span>07</span>核方法与 SVM 对偶
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS229</a><span>/</span><span>Supervised learning foundations</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS229 · Supervised learning foundations</p>
+          <h1>GDA 与朴素贝叶斯</h1>
+          <p class="note-summary">生成学习、多元高斯、高斯判别分析、朴素贝叶斯与 Laplace 平滑。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 2 min</span>
+            <span>5 / 7</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><blockquote>
+<p><strong>课程</strong>：Stanford CS229 (Autumn 2018) · Andrew Ng
+<strong>本讲主题</strong>：生成 vs 判别学习、多元高斯分布、高斯判别分析（GDA）、朴素贝叶斯（Naive Bayes）、Laplace 平滑、文本分类的事件模型
+<strong>视频</strong>：<a href="https://www.youtube.com/watch?v=nt63k3bfXS0">Lecture 5 - GDA &amp; Naive Bayes</a></p>
+</blockquote>
+<hr>
+<h2 id="一、判别式-vs-生成式：换一种思路做分类" tabindex="-1">一、判别式 vs 生成式：换一种思路做分类</h2>
+<p>之前学的所有算法（线性回归、逻辑回归、感知机、GLM）都在<strong>直接对 $p(y\mid x)$ 建模</strong>，或者直接学一个 $X \to {0,1}$ 的映射。</p>
+<p>本讲换一条路：<strong>先分别给每一类建一个&quot;长相模型&quot;</strong>，再用贝叶斯公式倒推后验。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>判别学习算法 Discriminative</th>
+<th>生成学习算法 Generative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>建模对象</td>
+<td>$p(y\mid x;\theta)$，或直接学 $X \to {0,1}$ 的映射</td>
+<td>$p(x\mid y)$ 与 $p(y)$</td>
+</tr>
+<tr>
+<td>代表算法</td>
+<td>逻辑回归、感知机、SVM</td>
+<td><strong>GDA、朴素贝叶斯</strong></td>
+</tr>
+<tr>
+<td>直觉</td>
+<td>直接找&quot;把大象和狗分开的那条线&quot;</td>
+<td>先学&quot;大象长什么样&quot;“狗长什么样”，再看新动物更像谁</td>
+</tr>
+</tbody>
+</table>
+<p><strong>流程</strong>：</p>
+<ol>
+<li>用训练集分别拟合 $p(x\mid y=1)$（正类特征分布）与 $p(x\mid y=0)$（负类特征分布）</li>
+<li>拟合<strong>类先验（class priors）</strong> $p(y)$</li>
+<li>用<strong>贝叶斯公式</strong>得到后验：</li>
+</ol>
+<p>$$
+p(y\mid x) = \frac{p(x\mid y),p(y)}{p(x)},
+\qquad
+p(x) = p(x\mid y=1)p(y=1) + p(x\mid y=0)p(y=0)
+$$</p>
+<p><strong>预测时不需要算分母</strong>（对 $y$ 取 argmax 时 $p(x)$ 是常数）：</p>
+<p>$$
+\arg\max_y p(y\mid x) = \arg\max_y \frac{p(x\mid y)p(y)}{p(x)} = \arg\max_y p(x\mid y),p(y)
+$$</p>
+<blockquote>
+<p>🔑 生成式模型的关键卖点：<strong>只要比较 $p(x\mid y)p(y)$ 就够了</strong>，分母永远不用算。</p>
+</blockquote>
+<hr>
+<h2 id="二、多元高斯分布（gda-的零件）" tabindex="-1">二、多元高斯分布（GDA 的&quot;零件&quot;）</h2>
+<p>$d$ 维<strong>多元正态（高斯）分布</strong>由均值向量 $\mu \in \mathbb{R}^d$ 与协方差矩阵 $\Sigma \in \mathbb{R}^{d\times d}$ 参数化（$\Sigma$ 对称、半正定），记作 $x \sim \mathcal{N}(\mu,\Sigma)$：</p>
+<p>$$
+p(x;\mu,\Sigma) = \frac{1}{(2\pi)^{d/2}|\Sigma|^{1/2}}
+\exp\left(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
+$$</p>
+<ul>
+<li>$E[X] = \mu$</li>
+<li>$\mathrm{Cov}(X) = \Sigma$，其中 $\mathrm{Cov}(Z) = E[(Z-E[Z])(Z-E[Z])^T] = E[ZZ^T] - (E[Z])(E[Z])^T$</li>
+<li>$|\Sigma|$ 是行列式；指数里的二次型 $(x-\mu)^T\Sigma^{-1}(x-\mu)$ 即<strong>马氏距离的平方</strong></li>
+</ul>
+<p><strong>协方差的几何直觉</strong>（讲义里三组等值线图，均取 $\mu = 0$）：</p>
+<table>
+<thead>
+<tr>
+<th>改变</th>
+<th>密度的样子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$\Sigma = I$</td>
+<td>标准正态，等值线是<strong>圆</strong></td>
+</tr>
+<tr>
+<td>$\Sigma = 0.6I$</td>
+<td>更&quot;压缩&quot;、更集中</td>
+</tr>
+<tr>
+<td>$\Sigma = 2I$</td>
+<td>更&quot;摊开&quot;</td>
+</tr>
+<tr>
+<td>增大非对角元（$0.5$、$0.8$）</td>
+<td>沿 $x_1 = x_2$（45° 线）方向压扁</td>
+</tr>
+<tr>
+<td>非对角元取负（$-0.5$、$-0.8$）</td>
+<td>朝相反方向压扁</td>
+</tr>
+<tr>
+<td>对角元素不相等（如 $\Sigma_{11}=3,\ \Sigma_{22}=1$）</td>
+<td>等值线是一般<strong>椭圆</strong></td>
+</tr>
+<tr>
+<td>只改 $\mu$</td>
+<td>整体平移，形状不变</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="三、高斯判别分析-gda" tabindex="-1">三、高斯判别分析 GDA</h2>
+<p>特征 $x$ 连续时，把 $p(x\mid y)$ 建模成多元高斯，得到 GDA：</p>
+<p>$$
+y \sim \mathrm{Bernoulli}(\phi),\qquad
+x\mid y=0 \sim \mathcal{N}(\mu_0,\Sigma),\qquad
+x\mid y=1 \sim \mathcal{N}(\mu_1,\Sigma)
+$$</p>
+<p>写开就是：</p>
+<p>$$
+p(y) = \phi^{y}(1-\phi)^{1-y}
+$$</p>
+<p>$$
+p(x\mid y=0) = \frac{1}{(2\pi)^{d/2}|\Sigma|^{1/2}}\exp\left(-\frac12 (x-\mu_0)^T\Sigma^{-1}(x-\mu_0)\right)
+$$</p>
+<p>$$
+p(x\mid y=1) = \frac{1}{(2\pi)^{d/2}|\Sigma|^{1/2}}\exp\left(-\frac12 (x-\mu_1)^T\Sigma^{-1}(x-\mu_1)\right)
+$$</p>
+<p>参数为 $\phi,\mu_0,\mu_1,\Sigma$。<strong>注意：两个类各有自己的均值 $\mu_0,\mu_1$，但通常共用同一个 $\Sigma$。</strong></p>
+<h3 id="1-极大似然估计（结论都非常好记）" tabindex="-1">1. 极大似然估计（结论都非常好记）</h3>
+<p>联合对数似然：</p>
+<p>$$
+\ell(\phi,\mu_0,\mu_1,\Sigma) = \log\prod_{i=1}^{n} p(x^{(i)}\mid y^{(i)};\mu_0,\mu_1,\Sigma),p(y^{(i)};\phi)
+$$</p>
+<p>对参数最大化后得到：</p>
+<p>$$
+\phi = \frac{1}{n}\sum_{i=1}^{n} \mathbb{1}{y^{(i)} = 1}
+$$</p>
+<p>$$
+\mu_0 = \frac{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0},x^{(i)}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0}},
+\qquad
+\mu_1 = \frac{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1},x^{(i)}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1}}
+$$</p>
+<p>$$
+\Sigma = \frac{1}{n}\sum_{i=1}^{n}\left(x^{(i)} - \mu_{y^{(i)}}\right)\left(x^{(i)} - \mu_{y^{(i)}}\right)^T
+$$</p>
+<ul>
+<li>$\phi$：正类样本所占比例</li>
+<li>$\mu_0,\mu_1$：两个类的<strong>样本均值</strong>（类内平均）</li>
+<li>$\Sigma$：用<strong>每个样本所属类的均值</strong> $\mu_{y^{(i)}}$ 算出的平均二阶矩（共享一个 $\Sigma$）</li>
+</ul>
+<h3 id="2-几何图像与决策边界" tabindex="-1">2. 几何图像与决策边界</h3>
+<ul>
+<li>两个类的等值线<strong>形状、朝向相同</strong>（因为共享 $\Sigma$），只是中心不同 → 拼成一个&quot;双峰&quot;分布</li>
+<li>决策边界取 $p(y=1\mid x) = 0.5$ 的位置；由于 $\Sigma$ 相同，这条边界是<strong>一条直线</strong></li>
+</ul>
+<blockquote>
+<p>补充：如果两类分别用 $\Sigma_0,\Sigma_1$，边界会变成二次曲线（GDA 的推广，QDA）。</p>
+</blockquote>
+<h3 id="3-gda-与逻辑回归的关系（本讲最重要的洞见）" tabindex="-1">3. GDA 与逻辑回归的关系（本讲最重要的洞见）</h3>
+<p>把 $p(y=1\mid x;\phi,\mu_0,\mu_1,\Sigma)$ 看成 $x$ 的函数，可以证明它恰好能写成</p>
+<p>$$
+p(y=1\mid x) = \frac{1}{1+\exp(-\theta^T x)}
+$$</p>
+<p>其中 $\theta$ 是 $\phi,\Sigma,\mu_0,\mu_1$ 的某个函数——<strong>这正是逻辑回归（判别式算法）的形式</strong>。</p>
+<p>但<strong>反向不成立</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>是否成立</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$p(x\mid y)$ 是（共享 $\Sigma$ 的）高斯 $\Rightarrow$ $p(y\mid x)$ 是 logistic</td>
+<td>✅ 成立</td>
+</tr>
+<tr>
+<td>$p(y\mid x)$ 是 logistic $\Rightarrow$ $p(x\mid y)$ 是高斯</td>
+<td>❌ 不成立</td>
+</tr>
+</tbody>
+</table>
+<p>反例：若 $x\mid y=0 \sim \mathrm{Poisson}(\lambda_0)$、$x\mid y=1 \sim \mathrm{Poisson}(\lambda_1)$，后验也是 logistic 形式，但显然不是高斯。</p>
+<p><strong>结论：GDA 的建模假设比逻辑回归强得多。</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>GDA</th>
+<th>逻辑回归</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>假设强度</td>
+<td><strong>强</strong>（假设了 $p(x\mid y)$ 的具体分布）</td>
+<td><strong>弱</strong>（只假设后验形式）</td>
+</tr>
+<tr>
+<td>假设正确时</td>
+<td><strong>更好、更省数据</strong>（data efficient）；数据量很大时是 asymptotically efficient，“没有算法严格更好”</td>
+<td>略逊</td>
+</tr>
+<tr>
+<td>假设错误时</td>
+<td>表现不可预测，可能很差</td>
+<td><strong>更鲁棒</strong>；大数据下几乎总是更好</td>
+</tr>
+<tr>
+<td>实践</td>
+<td>用得少</td>
+<td><strong>更常用</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🔑 一句话：<strong>假设越强，命中时越省数据；假设错了就越脆弱。</strong> GDA 用强假设换数据效率，逻辑回归用鲁棒性换&quot;需要更多数据&quot;。</p>
+</blockquote>
+<hr>
+<h2 id="四、朴素贝叶斯-naive-bayes" tabindex="-1">四、朴素贝叶斯 Naive Bayes</h2>
+<p>GDA 处理连续特征；朴素贝叶斯处理<strong>离散特征</strong>。动机例子：<strong>垃圾邮件分类器</strong>。</p>
+<h3 id="1-特征表示（词袋向量）" tabindex="-1">1. 特征表示（词袋向量）</h3>
+<ul>
+<li>建立一个<strong>词汇表（vocabulary）</strong>，长度为 $d$（比如 50000 个词）</li>
+<li>每封邮件表示成 $x \in {0,1}^{d}$：若出现词典第 $j$ 个词，则 $x_j = 1$，否则 $x_j = 0$
+<ul>
+<li>例：$x = [1,0,0,\dots,1,\dots,0]^T$ 表示邮件含 “a” 与 “buy”，不含 “aardvark”、“aardwolf”、“zygmurgy”</li>
+</ul>
+</li>
+<li>若直接建模 $x$ 的联合分布，需要 $2^{50000}$ 种结果 → <strong>参数爆炸</strong>（$2^{50000}-1$ 维参数向量），不可能做到</li>
+</ul>
+<blockquote>
+<p>实践细节：词汇表通常直接从训练集里取&quot;至少出现过一次&quot;的词；还会剔除 “the/of/and” 这类高频的<strong>停用词（stop words）</strong>，因为它们几乎不携带类别信息。</p>
+</blockquote>
+<h3 id="2-朴素贝叶斯假设（条件独立）" tabindex="-1">2. 朴素贝叶斯假设（条件独立）</h3>
+<p><strong>假设：给定 $y$，各特征 $x_j$ 相互条件独立</strong>：</p>
+<p>$$
+p(x_{2087}\mid y) = p(x_{2087}\mid y,,x_{39831})
+$$</p>
+<p>直觉：一旦知道这封邮件是垃圾邮件，那么&quot;buy&quot;是否出现，就<strong>不再影响</strong>你对&quot;price&quot;是否出现的判断。</p>
+<blockquote>
+<p>⚠️ 这是<strong>条件独立</strong>，不是普通独立。普通独立写作 $p(x_{2087}) = p(x_{2087}\mid x_{39831})$——两个式子含义完全不同。</p>
+</blockquote>
+<p>由链式法则 + NB 假设，联合分布被拆成连乘：</p>
+<p>$$
+p(x_1,\dots,x_d\mid y) = \prod_{j=1}^{d} p(x_j \mid y)
+$$</p>
+<blockquote>
+<p>假设非常强（现实中 “buy” 和 “price” 明显相关），但朴素贝叶斯在大量实际问题上<strong>仍然效果很好</strong>。</p>
+</blockquote>
+<h3 id="3-参数与-mle" tabindex="-1">3. 参数与 MLE</h3>
+<p>模型参数：</p>
+<ul>
+<li>$\phi_{j\mid y=1} = p(x_j = 1\mid y = 1)$</li>
+<li>$\phi_{j\mid y=0} = p(x_j = 1\mid y = 0)$</li>
+<li>$\phi_y = p(y=1)$</li>
+</ul>
+<p>极大似然估计：</p>
+<p>$$
+\phi_{j\mid y=1} = \frac{\sum_{i=1}^{n}\mathbb{1}{x_j^{(i)}=1 \wedge y^{(i)}=1}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1}},
+\qquad
+\phi_{j\mid y=0} = \frac{\sum_{i=1}^{n}\mathbb{1}{x_j^{(i)}=1 \wedge y^{(i)}=0}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0}}
+$$</p>
+<p>$$
+\phi_y = \frac{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1}}{n}
+$$</p>
+<p>（$\wedge$ 表示&quot;且&quot;。）</p>
+<p><strong>直观解释</strong>：$\phi_{j\mid y=1}$ 就是&quot;<strong>所有垃圾邮件里，出现过第 $j$ 个词的比例</strong>&quot;。</p>
+<h3 id="4-预测" tabindex="-1">4. 预测</h3>
+<p>$$
+p(y=1\mid x) = \frac{\prod_{j=1}^{d} p(x_j\mid y=1),p(y=1)}
+{\prod_{j=1}^{d} p(x_j\mid y=1)p(y=1) + \prod_{j=1}^{d} p(x_j\mid y=0)p(y=0)}
+$$</p>
+<p>取后验概率更大的那一类。</p>
+<blockquote>
+<p>💡 实现时一般比较<strong>对数</strong>（把连乘变连加，避免大量小数相乘下溢）：
+$$
+\log p(y=1\mid x) = \sum_{j=1}^{d}\log p(x_j\mid y=1) + \log p(y=1) + \text{const}
+$$</p>
+</blockquote>
+<h3 id="5-推广：多值特征与连续特征" tabindex="-1">5. 推广：多值特征与连续特征</h3>
+<ul>
+<li>$x_j \in {1,2,\dots,k_j}$：把 $p(x_j\mid y)$ 从 Bernoulli 换成 <strong>Multinomial</strong> 即可</li>
+<li>连续属性可以<strong>离散化</strong>后再用 NB，例如把住房面积分段：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>住房面积（平方英尺）</th>
+<th>&lt; 400</th>
+<th>400–800</th>
+<th>800–1200</th>
+<th>1200–1600</th>
+<th>&gt; 1600</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$x_j$</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<p>890 平方英尺的房子就取 $x_j = 3$。</p>
+<blockquote>
+<p>当连续属性<strong>不太像高斯分布</strong>时，&quot;离散化 + 朴素贝叶斯&quot;往往比 GDA 效果更好。</p>
+</blockquote>
+<hr>
+<h2 id="五、laplace-平滑（朴素贝叶斯真正可用的关键一步）" tabindex="-1">五、Laplace 平滑（朴素贝叶斯真正可用的关键一步）</h2>
+<h3 id="1-问题：没见过的词-→-概率被判成-0" tabindex="-1">1. 问题：没见过的词 → 概率被判成 0</h3>
+<p>设想你（在 CS229 项目做得很棒之后）向 NeurIPS 投了论文，从此邮件里开始出现 “neurips”。但<strong>训练集里从来没出现过这个词</strong>。假设它是词典第 35000 个词，MLE 给出</p>
+<p>$$
+\phi_{35000\mid y=1} = 0,\qquad \phi_{35000\mid y=0} = 0
+$$</p>
+<p>于是预测时</p>
+<p>$$
+p(y=1\mid x) = \frac{\prod_j p(x_j\mid y=1)p(y=1)}{\prod_j p(x_j\mid y=1)p(y=1)+\prod_j p(x_j\mid y=0)p(y=0)} = \frac{0}{0}
+$$</p>
+<p>因为每个连乘里都包含了 $p(x_{35000}\mid y) = 0$ 这一项，算法<strong>直接失效</strong>。</p>
+<blockquote>
+<p>更广义地说：仅因为有限训练集里没出现过，就把某个事件的概率估成 0，在统计上是不可取的。</p>
+</blockquote>
+<h3 id="2-平滑公式" tabindex="-1">2. 平滑公式</h3>
+<p>对取值 ${1,\dots,k}$ 的多项式变量 $z$，MLE 为 $\phi_j = \frac{\sum_i \mathbb{1}{z^{(i)}=j}}{n}$（可能为 0）。<strong>Laplace 平滑</strong>（加一平滑）改为</p>
+<p>$$
+\phi_j = \frac{1 + \sum_{i=1}^{n}\mathbb{1}{z^{(i)}=j}}{k + n}
+$$</p>
+<ul>
+<li>分子加 1，分母加 $k$</li>
+<li>仍有 $\sum_{j=1}^{k}\phi_j = 1$（可以自己验证一下）</li>
+<li>所有 $\phi_j \neq 0$，&quot;0/0&quot;问题消失</li>
+<li>在某些条件（可以说还比较强）下，可以证明 Laplace 平滑给出的其实是 $\phi_j$ 的<strong>最优估计</strong></li>
+</ul>
+<h3 id="3-用到朴素贝叶斯上" tabindex="-1">3. 用到朴素贝叶斯上</h3>
+<p>$$
+\phi_{j\mid y=1} = \frac{1 + \sum_{i=1}^{n}\mathbb{1}{x_j^{(i)}=1 \wedge y^{(i)}=1}}{2 + \sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1}},
+\qquad
+\phi_{j\mid y=0} = \frac{1 + \sum_{i=1}^{n}\mathbb{1}{x_j^{(i)}=1 \wedge y^{(i)}=0}}{2 + \sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0}}
+$$</p>
+<p>（特征是二值的，所以 $k=2$，分母加 2。）</p>
+<blockquote>
+<p>通常<strong>不对 $\phi_y$ 平滑</strong>：垃圾/正常邮件通常都不算少，$\phi_y$ 离 0 很远，平滑与否影响很小。</p>
+</blockquote>
+<hr>
+<h2 id="六、文本分类的两种事件模型" tabindex="-1">六、文本分类的两种事件模型</h2>
+<h3 id="1-bernoulli（多变量伯努利）事件模型" tabindex="-1">1. Bernoulli（多变量伯努利）事件模型</h3>
+<p>前面讲的朴素贝叶斯就是这个模型。<strong>它假设的&quot;生成故事&quot;</strong>：</p>
+<ol>
+<li>先按 $p(y)$ 决定这封邮件是垃圾还是正常</li>
+<li>发件人<strong>遍历整个词典</strong>，对每个词 $j$ 独立地按 $\phi_{j\mid y} = p(x_j=1\mid y)$ 决定是否把该词写进邮件</li>
+</ol>
+<p>每封邮件的概率：$p(y)\prod_{j=1}^{d}p(x_j\mid y)$。</p>
+<h3 id="2-multinomial（多项式）事件模型" tabindex="-1">2. Multinomial（多项式）事件模型</h3>
+<p>换一套特征：$x_j$ 表示邮件中<strong>第 $j$ 个词的身份</strong>，取值 ${1,\dots,|V|}$（$|V|$ 为词汇表大小）。一封 $d$ 个词的邮件记作 $(x_1,\dots,x_d)$，<strong>$d$ 随文档变化</strong>。</p>
+<p>例：邮件开头是 “A NeurIPS …”，则 $x_1 = 1$（“a” 排第 1），$x_2 = 35000$（“neurips” 排第 35000）。</p>
+<p><strong>生成故事</strong>：</p>
+<ol>
+<li>先按 $p(y)$ 决定垃圾/正常</li>
+<li>依次生成 $x_1,x_2,\dots,x_d$：每个词都独立地取自<strong>同一个</strong>多项分布 $p(x_j\mid y)$（<strong>与词在句子中的位置 $j$ 无关</strong>）</li>
+</ol>
+<p>参数：$\phi_y = p(y)$，$\phi_{k\mid y=1} = p(x_j=k\mid y=1)$，$\phi_{k\mid y=0} = p(x_j=k\mid y=0)$。</p>
+<p>MLE：</p>
+<p>$$
+\phi_{k\mid y=1} = \frac{\sum_{i=1}^{n}\sum_{j=1}^{d_i}\mathbb{1}{x_j^{(i)}=k \wedge y^{(i)}=1}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1},d_i},
+\qquad
+\phi_{k\mid y=0} = \frac{\sum_{i=1}^{n}\sum_{j=1}^{d_i}\mathbb{1}{x_j^{(i)}=k \wedge y^{(i)}=0}}{\sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0},d_i}
+$$</p>
+<p>加 Laplace 平滑（分子 +1、分母 +$|V|$）：</p>
+<p>$$
+\phi_{k\mid y=1} = \frac{1 + \sum_{i=1}^{n}\sum_{j=1}^{d_i}\mathbb{1}{x_j^{(i)}=k \wedge y^{(i)}=1}}{|V| + \sum_{i=1}^{n}\mathbb{1}{y^{(i)}=1},d_i},
+\qquad
+\phi_{k\mid y=0} = \frac{1 + \sum_{i=1}^{n}\sum_{j=1}^{d_i}\mathbb{1}{x_j^{(i)}=k \wedge y^{(i)}=0}}{|V| + \sum_{i=1}^{n}\mathbb{1}{y^{(i)}=0},d_i}
+$$</p>
+<h3 id="3-两个模型对比" tabindex="-1">3. 两个模型对比</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Bernoulli 事件模型</th>
+<th>Multinomial 事件模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$x_j$ 的含义</td>
+<td>词典中第 $j$ 个词<strong>是否出现</strong>（0/1）</td>
+<td>句子中第 $j$ 个词<strong>是哪个词</strong>（$1…|V|$）</td>
+</tr>
+<tr>
+<td>是否利用词频</td>
+<td>❌ 只看出现/不出现</td>
+<td>✅ 出现多次会有影响</td>
+</tr>
+<tr>
+<td>文档长度</td>
+<td>固定 $d$ 维</td>
+<td>长度可变</td>
+</tr>
+<tr>
+<td>文本分类表现</td>
+<td>可用</td>
+<td><strong>通常更好</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>结论：朴素贝叶斯简单、易实现，效果常常&quot;出奇地好&quot;，是拿到分类问题的<strong>第一个可试方案</strong>。后面的课会看到，SVM 在垃圾邮件这类任务上还能做得更好。</p>
+</blockquote>
+<hr>
+<h2 id="易混点速查" tabindex="-1">易混点速查</h2>
+<ul>
+<li><strong>条件独立 ≠ 独立</strong>：NB 假设是 $p(x_j\mid y) = p(x_j\mid y,x_k)$，不是 $p(x_j) = p(x_j\mid x_k)$</li>
+<li><strong>$\phi_{j\mid y=1}$ 的含义</strong>：垃圾邮件中出现词 $j$ 的比例（分母是垃圾邮件数，不是总邮件数）</li>
+<li><strong>共享 $\Sigma$</strong>：GDA 的决策边界是直线，正是&quot;两类共用协方差&quot;的结果</li>
+<li><strong>平滑配对</strong>：二值特征分母 $+2$，多值特征分母 $+k$，多词多项式模型分母 $+|V|$</li>
+<li><strong>生成式不止 GDA/NB</strong>：只要建模 $p(x\mid y)p(y)$ 都属于这类；NB 也常与&quot;离散化 + 多项式&quot;搭配使用</li>
+</ul>
+<hr>
+<h2 id="小结" tabindex="-1">小结</h2>
+<pre class="hljs"><code>生成式思路：建模 p(x|y) 与 p(y) ──贝叶斯公式──▶ p(y|x)（分母可丢）
+        │
+        ├─ 连续特征 ─▶ GDA：两类共享 Σ 的高斯
+        │                  ↳ 推得 p(y|x) 就是 logistic 形式（但反向不成立）
+        │                  ↳ 假设强、省数据；假设错则脆弱，逻辑回归更鲁棒
+        │
+        └─ 离散特征 ─▶ 朴素贝叶斯：条件独立假设 p(x|y) = ∏ⱼ p(xⱼ|y)
+                           ├─ 参数 = 各词在类内文档中出现的比例
+                           ├─ Laplace 平滑（分子+1、分母+k）解决&quot;没见过 ⇒ 概率 0&quot;
+                           └─ 事件模型：Bernoulli（是否出现） vs Multinomial（是哪个词）
+</code></pre>
+<p><strong>本讲关键词</strong>：生成/判别学习、贝叶斯公式、类先验、多元高斯、协方差矩阵、GDA、asymptotically efficient、条件独立、词袋、Laplace 平滑、Bernoulli / Multinomial 事件模型。</p>
+<p><strong>下讲预告</strong>：支持向量机（SVM）——函数间隔与几何间隔、最优间隔分类器、Lagrange 对偶与 KKT 条件，以及为核方法铺路的&quot;算法只用内积表示&quot;。</p>
+<p><strong>备注</strong>：本笔记依据 CS229 官方讲义 <em>Generative Learning Algorithms</em>（cs229-notes2）整理，与 Lecture 5 视频内容一致（视频因 YouTube 反爬校验无法抓取字幕）。</p>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="04-softmax-regression.html"><span>Previous</span><strong>Softmax 回归</strong></a>
+    <a class="next" href="06-support-vector-machines.html"><span>Next</span><strong>支持向量机</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#一、判别式-vs-生成式：换一种思路做分类">一、判别式 vs 生成式：换一种思路做分类</a><a class="toc-level-2" href="#二、多元高斯分布（gda-的零件）">二、多元高斯分布（GDA 的&quot;零件&quot;）</a><a class="toc-level-2" href="#三、高斯判别分析-gda">三、高斯判别分析 GDA</a><a class="toc-level-3" href="#1-极大似然估计（结论都非常好记）">1. 极大似然估计（结论都非常好记）</a><a class="toc-level-3" href="#2-几何图像与决策边界">2. 几何图像与决策边界</a><a class="toc-level-3" href="#3-gda-与逻辑回归的关系（本讲最重要的洞见）">3. GDA 与逻辑回归的关系（本讲最重要的洞见）</a><a class="toc-level-2" href="#四、朴素贝叶斯-naive-bayes">四、朴素贝叶斯 Naive Bayes</a><a class="toc-level-3" href="#1-特征表示（词袋向量）">1. 特征表示（词袋向量）</a><a class="toc-level-3" href="#2-朴素贝叶斯假设（条件独立）">2. 朴素贝叶斯假设（条件独立）</a><a class="toc-level-3" href="#3-参数与-mle">3. 参数与 MLE</a><a class="toc-level-3" href="#4-预测">4. 预测</a><a class="toc-level-3" href="#5-推广：多值特征与连续特征">5. 推广：多值特征与连续特征</a><a class="toc-level-2" href="#五、laplace-平滑（朴素贝叶斯真正可用的关键一步）">五、Laplace 平滑（朴素贝叶斯真正可用的关键一步）</a><a class="toc-level-3" href="#1-问题：没见过的词-→-概率被判成-0">1. 问题：没见过的词 → 概率被判成 0</a><a class="toc-level-3" href="#2-平滑公式">2. 平滑公式</a><a class="toc-level-3" href="#3-用到朴素贝叶斯上">3. 用到朴素贝叶斯上</a><a class="toc-level-2" href="#六、文本分类的两种事件模型">六、文本分类的两种事件模型</a><a class="toc-level-3" href="#1-bernoulli（多变量伯努利）事件模型">1. Bernoulli（多变量伯努利）事件模型</a><a class="toc-level-3" href="#2-multinomial（多项式）事件模型">2. Multinomial（多项式）事件模型</a><a class="toc-level-3" href="#3-两个模型对比">3. 两个模型对比</a><a class="toc-level-2" href="#易混点速查">易混点速查</a><a class="toc-level-2" href="#小结">小结</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

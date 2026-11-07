@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="从 BST 退化问题进入平衡树与 B 树结构。">
+  <meta name="author" content="Mingjv Li">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="B 树 · Mingjv Li Notes">
+  <meta property="og:description" content="从 BST 退化问题进入平衡树与 B 树结构。">
+  <meta property="og:url" content="https://taoanfang.github.io/learning-notes/">
+  <title>B 树 · Mingjv Li Notes</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/vendor/katex.min.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("notes-theme");
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+    })();
+  </script>
+</head>
+<body class="note-detail-page accent-teal" data-root="../">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="Back to notes index">
+        <span class="brand-mark">ML</span>
+        <span class="brand-text">Mingjv Li · Notes</span>
+      </a>
+      <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+        <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+      </button>
+      <nav class="site-nav" aria-label="Notes navigation">
+        <a href="https://taoanfang.github.io/">Home</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a class="is-current" href="../index.html">Notes</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+      </nav>
+      <div class="header-actions">
+        <button class="search-trigger" type="button" data-search-open aria-label="Search notes">
+          <i data-lucide="search" width="17" height="17" aria-hidden="true"></i>
+          <span>Search notes</span>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <i data-lucide="sun-moon" width="18" height="18" aria-hidden="true"></i>
+        </button>
+        <a class="icon-button" href="https://github.com/taoanfang" target="_blank" rel="noopener" aria-label="Open GitHub profile">
+          <i data-lucide="github" width="18" height="18" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+  <div class="reading-progress" data-reading-progress></div>
+  <main id="main-content" class="note-page accent-teal">
+    <div class="note-layout">
+      <aside class="course-sidebar" data-course-sidebar>
+        <div class="sidebar-heading"><a href="index.html">CS61B</a><span>Java 与数据结构</span></div>
+        <nav aria-label="Course notes"><a class="" href="01-java-oop-encapsulation.html">
+        <span>01</span>Java 面向对象与封装
+      </a><a class="" href="02-inheritance-interfaces.html">
+        <span>02</span>继承、抽象类与接口
+      </a><a class="" href="03-polymorphism-inner-classes.html">
+        <span>03</span>多态与内部类
+      </a><a class="" href="04-generics.html">
+        <span>04</span>Java 泛型
+      </a><a class="" href="05-java-api.html">
+        <span>05</span>Java API：字符串、包装类与正则
+      </a><a class="" href="06-collections-iterators.html">
+        <span>06</span>集合与迭代器
+      </a><a class="" href="07-exceptions.html">
+        <span>07</span>异常处理
+      </a><a class="" href="08-io-streams.html">
+        <span>08</span>文件与 IO 流
+      </a><a class="" href="09-multithreading.html">
+        <span>09</span>多线程
+      </a><a class="" href="10-network-programming.html">
+        <span>10</span>网络编程
+      </a><a class="" href="11-adt-and-algorithms.html">
+        <span>11</span>ADT 与算法基础
+      </a><a class="" href="12-linear-lists.html">
+        <span>12</span>线性表
+      </a><a class="" href="13-stacks-and-queues.html">
+        <span>13</span>栈与队列
+      </a><a class="" href="14-linked-lists-recursion.html">
+        <span>14</span>链表与递归数据结构
+      </a><a class="" href="15-doubly-linked-lists.html">
+        <span>15</span>双向链表与动态数组
+      </a><a class="" href="16-generic-collections.html">
+        <span>16</span>泛型集合入门
+      </a><a class="" href="17-comparable-comparator.html">
+        <span>17</span>多态、Comparable 与 Comparator
+      </a><a class="" href="18-asymptotics-union-find.html">
+        <span>18</span>增长阶与并查集
+      </a><a class="" href="19-binary-search-trees.html">
+        <span>19</span>二叉搜索树
+      </a><a class="is-current" href="20-b-trees.html">
+        <span>20</span>B 树
+      </a></nav>
+      </aside>
+      <article class="note-article">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="https://taoanfang.github.io/">Home</a><span>/</span><a href="../index.html">Notes</a><span>/</span><a href="index.html">CS61B</a><span>/</span><span>Complexity and trees</span>
+        </nav>
+        <header class="note-hero">
+          <p class="eyebrow">CS61B · Complexity and trees</p>
+          <h1>B 树</h1>
+          <p class="note-summary">从 BST 退化问题进入平衡树与 B 树结构。</p>
+          <div class="note-meta">
+            <span><i data-lucide="clock-3" width="15" height="15" aria-hidden="true"></i> 3 min</span>
+            <span>20 / 20</span>
+            <button type="button" data-course-nav-toggle><i data-lucide="list" width="15" height="15" aria-hidden="true"></i> Course notes</button>
+          </div>
+        </header>
+        <div class="article-body"><h2 id="b-tree" tabindex="-1">B-Tree</h2>
+<p>miuzxc</p>
+<h2 id="一、前置知识：bst-树高与渐近符号-big-o-big-θ" tabindex="-1">一、前置知识：BST 树高与渐近符号 Big O / Big Θ</h2>
+<h3 id="1-bst-两种极端形态" tabindex="-1">1. BST 两种极端形态</h3>
+<ol>
+<li><strong>瘦长树（spindly，最坏情况）</strong> 顺序插入 1,2,3,4,5,6,7，树退化成链表，树高 (\Theta(N))，<code>contains/add</code> 耗时 (\Theta(N))。</li>
+<li><strong>矮胖树（bushy，最好情况）</strong> 随机 / 均衡插入，树高 (\Theta(\log N))，操作耗时 (\Theta(\log N))。</li>
+<li>现实痛点：业务数据经常有序（时间、日期），无法保证随机插入，BST 极易退化。</li>
+</ol>
+<h3 id="2-big-o-vs-big-θ-核心区别" tabindex="-1">2. Big O vs Big Θ 核心区别</h3>
+<ul>
+<li>(\Theta(X))：精确描述增长阶，等于 X；信息更精准。</li>
+<li>(O(X))：仅描述上界，增长速度不会超过 X；范围更宽泛。</li>
+</ul>
+<h4 id="举例对比" tabindex="-1">举例对比</h4>
+<ol>
+<li>「BST 最坏树高 (\Theta(N))」= 精确说明最差就是线性高度</li>
+<li>「BST 树高 (O(N))」= 所有树高度都不超过线性，包含最优、平均、最差</li>
+<li>「BST 树高 (O(N^2))」也成立，但完全没有参考价值。</li>
+</ol>
+<h4 id="通俗类比" tabindex="-1">通俗类比</h4>
+<ul>
+<li>(\Theta(N))：酒店最贵房间 639 元（精准上限）</li>
+<li>(O(N))：酒店所有房间≤639 元（宽泛约束） 精准的 Θ 描述信息量远大于宽泛的 O 描述。</li>
+</ul>
+<h3 id="3-随机插入-bst-特性" tabindex="-1">3. 随机插入 BST 特性</h3>
+<ul>
+<li>随机插入数据，树的<strong>平均深度、期望高度均为 (\Theta(\log N))</strong>；</li>
+<li>带删除操作时，只要删除时随机选前驱 / 后继，依旧保持 (\Theta(\log N)) 高度。</li>
+</ul>
+<h3 id="4-节点深度-树高定义" tabindex="-1">4. 节点深度 &amp; 树高定义</h3>
+<ul>
+<li>节点深度：节点距离根节点的层数（根深度 = 0）</li>
+<li>树高度：最深叶子的深度；决定单次查找最坏比较次数</li>
+<li>平均深度：所有节点深度平均值，决定查找平均耗时</li>
+</ul>
+<hr>
+<h2 id="二、b-树核心设计思路：彻底解决-bst-失衡" tabindex="-1">二、B 树核心设计思路：彻底解决 BST 失衡</h2>
+<h3 id="1-原始优化构想：不新增底层叶子" tabindex="-1">1. 原始优化构想：不新增底层叶子</h3>
+<p>普通 BST 失衡根源：每次新增节点都放在最底层，树越插越深。 B 树思路：新数据不生成新叶子，直接塞进现有叶子节点，<strong>永远不增加树的高度</strong>。 缺点：叶子节点会存放大量数据（课称 “多汁节点 juicy node”），节点内遍历变慢。</p>
+<h3 id="2-解决方案：节点分裂-split" tabindex="-1">2. 解决方案：节点分裂 Split</h3>
+<ol>
+<li>设定上限 L：单个节点最多存放 L 个键；</li>
+<li>插入后超量时执行分裂：
+<ul>
+<li>取出节点中间键，上移给父节点；</li>
+<li>剩余键拆分为左右两个新节点，作为父节点新子节点；</li>
+</ul>
+</li>
+<li>节点内仅存少量数据，单次对比开销是常数，不影响整体复杂度。</li>
+</ol>
+<h3 id="3-连锁分裂（chain-reaction-splitting）" tabindex="-1">3. 连锁分裂（Chain Reaction Splitting）</h3>
+<p>分裂后父节点新增键，若父节点也超出容量上限，继续向上分裂； 特殊场景：根节点满了需要分裂</p>
+<ul>
+<li>中间键单独生成新根；</li>
+<li>原节点拆分为左右两棵子树；</li>
+<li>整棵树高度 + 1，<strong>所有叶子同步下沉一层，深度依旧完全相等</strong>。</li>
+</ul>
+<h3 id="4-实操示例：2-3-树插入有序数字-1234567" tabindex="-1">4. 实操示例：2-3 树插入有序数字 1,2,3,4,5,6,7</h3>
+<p>普通 BST 会变成一条链；2-3 树全程平衡，所有叶子深度完全一致。 无论何种插入顺序，B 树都能维持矮胖形态，不会出现瘦长退化。</p>
+<hr>
+<h2 id="三、b-树两大强制不变量（invariants）" tabindex="-1">三、B 树两大强制不变量（Invariants）</h2>
+<p>这两条规则保证树永久平衡：</p>
+<ol>
+<li><strong>所有叶子节点到根的距离完全相同</strong>，不存在深浅不一的叶子；</li>
+<li>非叶子节点存储 k 个键，则一定拥有 (k+1) 个子节点； 例：节点存 2 个键，必须有 3 条分叉子树。</li>
+</ol>
+<p>违反任意一条的树都不属于合法 B 树。</p>
+<hr>
+<h2 id="四、b-树专业术语" tabindex="-1">四、B 树专业术语</h2>
+<h3 id="1-按节点容量分类" tabindex="-1">1. 按节点容量分类</h3>
+<ol>
+<li><strong>2-3 树（L=2）</strong> 单个节点最多存 2 个键，最多 3 个子节点；</li>
+<li><strong>2-3-4 树 / 2-4 树（L=3）</strong> 单个节点最多存 3 个键，最多 4 个子节点；</li>
+</ol>
+<h3 id="2-两种应用场景" tabindex="-1">2. 两种应用场景</h3>
+<ol>
+<li>教学场景：L=2/3（2-3、2-3-4 树），逻辑简单，用于理解平衡树；</li>
+<li>工程场景：L 取数千，数据库、文件系统底层存储结构。</li>
+</ol>
+<h3 id="补充" tabindex="-1">补充</h3>
+<p>B-tree 的 B 无官方定义，普遍认为代表 Balanced（平衡）、Bayer（发明者）。</p>
+<hr>
+<h2 id="五、b-树时间复杂度分析" tabindex="-1">五、B 树时间复杂度分析</h2>
+<p>参数说明：</p>
+<ul>
+<li>L：单节点最大键数量（常数）</li>
+<li>H：树高度，恒为 (\Theta(\log N))</li>
+</ul>
+<ol>
+<li><code>contains</code> 查找 逐层向下遍历节点，每层最多对比 L 个键；总复杂度 (O(L\log N) = O(\log N))。</li>
+<li><code>add</code> 插入 向下查找叶子 + 插入节点 + 最坏连锁分裂至根；分裂次数最多等于树高；总复杂度 (O(\log N))。</li>
+</ol>
+<h3 id="树高范围" tabindex="-1">树高范围</h3>
+<ul>
+<li>最优高度：全部节点填满 L 个键，高度 (\log_{L+1}N)</li>
+<li>最差高度：所有节点仅存 1 个键，高度 (\log_{2}N) 整体高度稳定为对数级别。</li>
+</ul>
+</div>
+        <nav class="prev-next" aria-label="Adjacent notes">
+    <a class="prev" href="19-binary-search-trees.html"><span>Previous</span><strong>二叉搜索树</strong></a>
+    <a class="next disabled"><span>Next</span><strong>End of course</strong></a>
+  </nav>
+      </article>
+      <aside class="toc-sidebar"><strong>On this page</strong><nav aria-label="On this page"><a class="toc-level-2" href="#b-tree">B-Tree</a><a class="toc-level-2" href="#一、前置知识：bst-树高与渐近符号-big-o-big-θ">一、前置知识：BST 树高与渐近符号 Big O / Big Θ</a><a class="toc-level-3" href="#1-bst-两种极端形态">1. BST 两种极端形态</a><a class="toc-level-3" href="#2-big-o-vs-big-θ-核心区别">2. Big O vs Big Θ 核心区别</a><a class="toc-level-3" href="#3-随机插入-bst-特性">3. 随机插入 BST 特性</a><a class="toc-level-3" href="#4-节点深度-树高定义">4. 节点深度 &amp; 树高定义</a><a class="toc-level-2" href="#二、b-树核心设计思路：彻底解决-bst-失衡">二、B 树核心设计思路：彻底解决 BST 失衡</a><a class="toc-level-3" href="#1-原始优化构想：不新增底层叶子">1. 原始优化构想：不新增底层叶子</a><a class="toc-level-3" href="#2-解决方案：节点分裂-split">2. 解决方案：节点分裂 Split</a><a class="toc-level-3" href="#3-连锁分裂（chain-reaction-splitting）">3. 连锁分裂（Chain Reaction Splitting）</a><a class="toc-level-3" href="#4-实操示例：2-3-树插入有序数字-1234567">4. 实操示例：2-3 树插入有序数字 1,2,3,4,5,6,7</a><a class="toc-level-2" href="#三、b-树两大强制不变量（invariants）">三、B 树两大强制不变量（Invariants）</a><a class="toc-level-2" href="#四、b-树专业术语">四、B 树专业术语</a><a class="toc-level-3" href="#1-按节点容量分类">1. 按节点容量分类</a><a class="toc-level-3" href="#2-两种应用场景">2. 两种应用场景</a><a class="toc-level-3" href="#补充">补充</a><a class="toc-level-2" href="#五、b-树时间复杂度分析">五、B 树时间复杂度分析</a><a class="toc-level-3" href="#树高范围">树高范围</a></nav></aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Mingjv Li</strong>
+        <p>Course notes · Supporting archive for the personal homepage</p>
+      </div>
+      <div class="footer-meta">
+        <a href="https://taoanfang.github.io/">Personal homepage</a>
+        <a href="https://taoanfang.github.io/project/deepseek-ocr-reproduction.html">Project</a>
+        <a href="https://taoanfang.github.io/cv.html">CV</a>
+        <span>Updated Nov 7, 2026</span>
+      </div>
+    </div>
+  </footer>
+  <dialog class="search-dialog" data-search-dialog>
+    <div class="search-shell">
+      <div class="search-field">
+        <i data-lucide="search" width="20" height="20" aria-hidden="true"></i>
+        <input type="search" placeholder="Search concepts, courses, or code" aria-label="Search notes" data-search-input autocomplete="off">
+        <button class="icon-button" type="button" data-search-close aria-label="Close search"><i data-lucide="x" width="18" height="18" aria-hidden="true"></i></button>
+      </div>
+      <div class="search-meta" data-search-meta>Start typing to search</div>
+      <div class="search-results" data-search-results></div>
+    </div>
+  </dialog>
+  <script src="../assets/vendor/lucide.min.js"></script>
+  <script src="../assets/vendor/katex.min.js"></script>
+  <script src="../assets/vendor/auto-render.min.js"></script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>
